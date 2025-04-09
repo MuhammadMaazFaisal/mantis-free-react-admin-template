@@ -1,31 +1,48 @@
-import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
-import { PlusOutlined } from '@ant-design/icons';
-import { useGetProductsQuery, useAddProductMutation, useUpdateProductMutation } from '../store/services/product';
+import React, { useState, useRef, useEffect } from 'react';
+import { Typography, Button, Box, Alert, Snackbar, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useGetProductsQuery, useAddProductMutation, useUpdateProductMutation, useDeleteProductMutation } from '../store/services/product';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from 'store/slices/authSlice';
 
 const Product = () => {
     const navigate = useNavigate();
-    const { data: products, isLoading } = useGetProductsQuery();
-    const [addProduct] = useAddProductMutation();
-    const [updateProduct] = useUpdateProductMutation();
+    const location = useLocation();
+    const isAuthenticated = useSelector(selectIsAuthenticated);
+    
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/login', { state: { from: location } });
+        }
+    }, [isAuthenticated, navigate, location]);
+
+    const { data: productsResponse, isLoading, isError, error, refetch } = useGetProductsQuery();
+    const [addProduct, { isLoading: isAdding }] = useAddProductMutation();
+    const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+    const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', or 'view'
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [formData, setFormData] = useState({
-        productGroup: '',
-        name: '',
-        unit: '',
-        productQuality: '',
-        ratePerQty: 0.0,
-        dueDays: 120,
-        amountAfterDueDays: 0.0,
-        details: '',
-        active: true,
+        itemNo: '',
+        productName: '',
+    });
+    
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
+    
+    const [deleteDialog, setDeleteDialog] = useState({
+        open: false,
+        id: null,
     });
 
     const [page, setPage] = useState(0);
@@ -34,62 +51,26 @@ const Product = () => {
     const tableRef = useRef();
     const detailsRef = useRef();
 
+    // Get products array safely from response
+    const products = productsResponse || [];
+
     const fields = [
-        {
-            name: 'productGroup',
-            label: 'Product Group',
-            type: 'select',
-            options: [
-                { value: '', label: 'Please select' },
-                { value: 'Rice Raw', label: 'Rice Raw' },
-                { value: 'Rice Finish', label: 'Rice Finish' },
-            ],
-            required: true,
-            sm: 6,
-        },
-        { name: 'name', label: 'Product Name', required: true, sm: 6 },
-        {
-            name: 'unit',
-            label: 'Unit',
-            type: 'select',
-            options: [
-                { value: '', label: 'Please select' },
-                { value: 'Kg', label: 'Kg' },
-            ],
-            required: true,
-            sm: 6,
-        },
-        { name: 'productQuality', label: 'Product Quality', sm: 6 },
-        { name: 'ratePerQty', label: 'Rate Per Quantity (₹)', type: 'number', required: true, sm: 6 },
-        { name: 'dueDays', label: 'Due Days', type: 'number', required: true, sm: 6 },
-        { name: 'amountAfterDueDays', label: 'Amount After Due Days (₹)', type: 'number', required: true, sm: 6 },
-        { name: 'details', label: 'Details', multiline: true, rows: 2 },
-        { name: 'active', label: 'Is Active', type: 'checkbox' },
+        { name: 'itemNo', label: 'Item No', required: true, sm: 6 },
+        { name: 'productName', label: 'Product Name', required: true, sm: 6 },
     ];
 
     const columns = [
         { id: 'id', label: 'ID' },
-        { id: 'productGroup', label: 'Product Group' },
         { id: 'name', label: 'Product Name' },
-        { id: 'unit', label: 'Unit' },
-        { id: 'productQuality', label: 'Product Quality' },
-        { id: 'ratePerQty', label: 'Rate Per Quantity (₹)' },
-        { id: 'dueDays', label: 'Due Days' },
-        { id: 'amountAfterDueDays', label: 'Amount After Due Days (₹)' },
-        { id: 'details', label: 'Details' },
-        {
-            id: 'active',
-            label: 'Is Active',
-            format: (value) => (value ? 'Yes' : 'No'),
-        },
+        { id: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
+        { id: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
     ];
 
     const viewFields = [
-        ...fields,
-        { name: 'addedBy', label: 'Added By' },
-        { name: 'addedOn', label: 'Added On' },
-        { name: 'modifiedBy', label: 'Modified By' },
-        { name: 'modifiedOn', label: 'Modified On' },
+        { name: 'id', label: 'ID' },
+        { name: 'name', label: 'Product Name' },
+        { name: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
+        { name: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
     ];
 
     const handleChangePage = (event, newPage) => {
@@ -104,19 +85,21 @@ const Product = () => {
     const handleOpenModal = (mode, product = null) => {
         setModalMode(mode);
         setSelectedProduct(product);
+        
         if (product) {
-            setFormData(product);
+            // Extract itemNo and productName from the name field
+            const nameParts = product.name.split(' - ');
+            const itemNo = nameParts[0] || '';
+            const productName = nameParts.length > 1 ? nameParts[1] : product.name;
+            
+            setFormData({
+                itemNo,
+                productName
+            });
         } else {
             setFormData({
-                productGroup: '',
-                name: '',
-                unit: '',
-                productQuality: '',
-                ratePerQty: 0.0,
-                dueDays: 120,
-                amountAfterDueDays: 0.0,
-                details: '',
-                active: true,
+                itemNo: '',
+                productName: '',
             });
         }
 
@@ -136,15 +119,8 @@ const Product = () => {
     const handleFormChange = (e) => {
         if (e.reset) {
             setFormData({
-                productGroup: '',
-                name: '',
-                unit: '',
-                productQuality: '',
-                ratePerQty: 0.0,
-                dueDays: 120,
-                amountAfterDueDays: 0.0,
-                details: '',
-                active: true,
+                itemNo: '',
+                productName: '',
             });
         } else {
             const { name, value } = e.target;
@@ -152,16 +128,70 @@ const Product = () => {
         }
     };
 
-    const handleSubmit = () => {
-        if (modalMode === 'add') {
-            addProduct(formData);
-        } else if (modalMode === 'edit') {
-            updateProduct({ ...formData, id: selectedProduct.id });
+    const handleSubmit = async () => {
+        try {
+            // Concatenate itemNo and productName to create the name field for API
+            const name = `${formData.itemNo} - ${formData.productName}`;
+            
+            if (modalMode === 'add') {
+                await addProduct({ name }).unwrap();
+                setSnackbar({
+                    open: true,
+                    message: 'Product added successfully',
+                    severity: 'success',
+                });
+            } else if (modalMode === 'edit') {
+                await updateProduct({ id: selectedProduct.id, name }).unwrap();
+                setSnackbar({
+                    open: true,
+                    message: 'Product updated successfully',
+                    severity: 'success',
+                });
+            }
+            handleCloseModal();
+            refetch(); // Refresh data
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: `Error: ${err.data?.message || 'Something went wrong'}`,
+                severity: 'error',
+            });
         }
-        handleCloseModal();
+    };
+    
+    const handleDeleteClick = (product) => {
+        setDeleteDialog({
+            open: true,
+            id: product.id,
+        });
+    };
+    
+    const handleDeleteConfirm = async () => {
+        try {
+            await deleteProduct(deleteDialog.id).unwrap();
+            setSnackbar({
+                open: true,
+                message: 'Product deleted successfully',
+                severity: 'success',
+            });
+            setDeleteDialog({ open: false, id: null });
+            refetch(); // Refresh data
+        } catch (err) {
+            setSnackbar({
+                open: true,
+                message: `Error: ${err.data?.message || 'Something went wrong'}`,
+                severity: 'error',
+            });
+            setDeleteDialog({ open: false, id: null });
+        }
+    };
+    
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
     };
 
-    if (isLoading) return <Typography>Loading...</Typography>;
+    if (isLoading) return <Typography>Loading products...</Typography>;
+    if (isError) return <Alert severity="error">Error: {error?.data?.message || 'Failed to load products'}</Alert>;
 
     return (
         <Box>
@@ -173,16 +203,31 @@ const Product = () => {
                         detailsRef={detailsRef}
                         fields={viewFields}
                     />
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
                         <Button variant="outlined" onClick={() => navigate('/product')}>
                             Back to Product List
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            color="primary"
+                            onClick={() => handleOpenModal('edit', selectedProduct)}
+                        >
+                            Edit Product
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            color="error"
+                            startIcon={<DeleteOutlined />}
+                            onClick={() => handleDeleteClick(selectedProduct)}
+                        >
+                            Delete
                         </Button>
                     </Box>
                 </>
             ) : (
                 <>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                        <Typography variant="h4">Product</Typography>
+                        <Typography variant="h4">Products</Typography>
                         <Button
                             variant="contained"
                             startIcon={<PlusOutlined />}
@@ -205,6 +250,8 @@ const Product = () => {
                     />
                 </>
             )}
+            
+            {/* Form Modal */}
             <SharedModal
                 open={modalOpen}
                 onClose={handleCloseModal}
@@ -221,6 +268,45 @@ const Product = () => {
                 mode={modalMode}
                 fields={fields}
             />
+            
+            {/* Snackbar for notifications */}
+            <Snackbar 
+                open={snackbar.open} 
+                autoHideDuration={6000} 
+                onClose={handleCloseSnackbar}
+            >
+                <Alert 
+                    onClose={handleCloseSnackbar} 
+                    severity={snackbar.severity} 
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+            
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialog.open}
+                onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+            >
+                <DialogTitle>Delete Product</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this product? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })}>Cancel</Button>
+                    <Button 
+                        onClick={handleDeleteConfirm} 
+                        color="error" 
+                        variant="contained"
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

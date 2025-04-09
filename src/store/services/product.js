@@ -1,76 +1,51 @@
-import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const productApi = createApi({
   reducerPath: 'productApi',
-  baseQuery: fakeBaseQuery(),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: 'https://red-mole-255685.hostingersite.com/public/api',
+    prepareHeaders: (headers, { getState }) => {
+      // Get token from state and set in headers for authorized requests
+      const token = getState().auth?.token;
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['Product'],
   endpoints: (builder) => ({
     getProducts: builder.query({
-      queryFn: () => ({
-        data: [
-          {
-            id: 1,
-            productGroup: 'Rice Raw',
-            name: '1121 White Raw',
-            unit: 'Kg',
-            productQuality: 'none',
-            ratePerQty: 0.0,
-            dueDays: 120,
-            amountAfterDueDays: 0.0,
-            details: '',
-            active: true,
-            addedBy: 'Admin',
-            addedOn: '2022-10-24',
-            modifiedBy: 'Admin',
-            modifiedOn: '2023-04-17',
-          },
-          {
-            id: 2,
-            productGroup: 'Rice Raw',
-            name: 'Super Karnal Raw',
-            unit: 'Kg',
-            productQuality: 'none',
-            ratePerQty: 0.0,
-            dueDays: 120,
-            amountAfterDueDays: 0.0,
-            details: '',
-            active: true,
-            addedBy: 'Admin',
-            addedOn: '2022-10-24',
-            modifiedBy: 'Admin',
-            modifiedOn: '2023-04-17',
-          },
-        ],
-      }),
+      query: () => '/products',
+      transformResponse: (response) => response.data || [],
       providesTags: ['Product'],
     }),
     getProductById: builder.query({
-      queryFn: (id) => ({
-        data: {
-          id,
-          productGroup: 'Rice Raw',
-          name: `Product ${id}`,
-          unit: 'Kg',
-          productQuality: 'none',
-          ratePerQty: 0.0,
-          dueDays: 120,
-          amountAfterDueDays: 0.0,
-          details: '',
-          active: true,
-          addedBy: 'Admin',
-          addedOn: '2022-10-24',
-          modifiedBy: 'Admin',
-          modifiedOn: '2023-04-17',
-        },
-      }),
-      providesTags: ['Product'],
+      query: (id) => `/products/${id}`,
+      transformResponse: (response) => response.data || {},
+      providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
     addProduct: builder.mutation({
-      queryFn: (newProduct) => ({ data: { ...newProduct, id: Math.random() } }),
+      query: (product) => ({
+        url: '/products',
+        method: 'POST',
+        body: product,
+      }),
       invalidatesTags: ['Product'],
     }),
     updateProduct: builder.mutation({
-      queryFn: (updatedProduct) => ({ data: updatedProduct }),
+      query: ({ id, ...product }) => ({
+        url: `/products/${id}`,
+        method: 'PUT',
+        body: product,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Product', id }],
+    }),
+    deleteProduct: builder.mutation({
+      query: (id) => ({
+        url: `/products/${id}`,
+        method: 'DELETE',
+      }),
       invalidatesTags: ['Product'],
     }),
   }),
@@ -81,4 +56,5 @@ export const {
   useGetProductByIdQuery,
   useAddProductMutation,
   useUpdateProductMutation,
+  useDeleteProductMutation,
 } = productApi;
