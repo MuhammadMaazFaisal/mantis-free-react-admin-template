@@ -75,7 +75,7 @@ const modules = {
   ],
 };
 const menuItems = {
-  items: [dashboard, modules, pages, utilities, support]
+  items: [dashboard, modules]
 };
 
 export default menuItems;
