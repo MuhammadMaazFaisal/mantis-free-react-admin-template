@@ -4,6 +4,8 @@ import { partyApi } from './services/party'; // Use named import
 import { productApi } from './services/product';
 import { receivingsApi } from './services/receivings';
 import { processingApi } from './services/processing';
+import { authApi } from './services/auth';
+import authReducer from './slices/authSlice';
 // import { processingPaymentApi } from './services/processingPayment';
 // import { adminExpensesApi } from './services/adminExpenses';
 // import { settingsApi } from './services/settings';
@@ -11,6 +13,8 @@ import { processingApi } from './services/processing';
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
+    [authApi.reducerPath]: authApi.reducer,
     [partyApi.reducerPath]: partyApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
     [receivingsApi.reducerPath]: receivingsApi.reducer,
@@ -22,6 +26,7 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat([
+      authApi.middleware,
       partyApi.middleware,
       productApi.middleware,
       receivingsApi.middleware,

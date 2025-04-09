@@ -157,7 +157,10 @@ const SharedTable = ({
             },
             // align label properly
             '& .MuiInputLabel-sizeSmall': {
-              lineHeight: '1.75rem',
+              lineHeight: '1.75rem !important',
+            },
+            '& .MuiInputLabel-shrink': {
+             top: '-5px !important',
             },
 
             

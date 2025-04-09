@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 
 // project imports
 import AuthLayout from 'layout/Auth';
@@ -13,6 +14,10 @@ const RegisterPage = Loadable(lazy(() => import('pages/auth/Register')));
 const LoginRoutes = {
   path: '/',
   children: [
+    {
+      path: '/',
+      element: <Navigate to="/login" replace />
+    },
     {
       path: '/',
       element: <AuthLayout />,
