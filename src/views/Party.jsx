@@ -5,8 +5,10 @@ import { useGetPartiesQuery, useAddPartyMutation, useUpdatePartyMutation } from 
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
+import { useNavigate } from 'react-router-dom';
 
 const Party = () => {
+  const navigate = useNavigate();
   const { data: parties, isLoading } = useGetPartiesQuery();
   const [addParty] = useAddPartyMutation();
   const [updateParty] = useUpdatePartyMutation();
@@ -31,18 +33,29 @@ const Party = () => {
   const tableRef = useRef();
   const detailsRef = useRef();
 
+  const fields = [
+    { name: 'name', label: 'Party Name', required: true },
+    { name: 'address', label: 'Address', multiline: true, rows: 2 },
+    { name: 'contactNumber', label: 'Contact Number', sm: 6 },
+    { name: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
+    { name: 'openingBalanceDate', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
+    { name: 'openingBalance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
+    { name: 'active', label: 'Is Active', type: 'checkbox' },
+  ];
+
   const columns = [
     { id: 'id', label: 'ID' },
-    { id: 'name', label: 'Name' },
+    { id: 'name', label: 'Party Name' },
     { id: 'address', label: 'Address' },
     { id: 'contactNumber', label: 'Contact Number' },
-    { id: 'discount', label: 'Discount %' },
+    { id: 'discount', label: 'Discount (%)' },
     { id: 'openingBalanceDate', label: 'Opening Balance Date' },
-    { id: 'openingBalance', label: 'Opening Balance' },
+    { id: 'openingBalance', label: 'Opening Balance (₹)' },
     { id: 'remarks', label: 'Remarks' },
     {
       id: 'active',
-      label: 'Active',
+      label: 'Is Active',
       format: (value) => (value ? 'Yes' : 'No'),
     },
   ];
@@ -73,12 +86,18 @@ const Party = () => {
         active: true,
       });
     }
-    setModalOpen(true);
+    if (mode !== 'view') {
+      setModalOpen(true);
+    }
+      
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedParty(null);
+    if (modalMode === 'view') {
+      navigate('/party');
+    }
   };
 
   const handleFormChange = (e) => {
@@ -110,31 +129,37 @@ const Party = () => {
 
   if (isLoading) return <Typography>Loading...</Typography>;
 
-  const paginatedData = parties.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
   return (
     <Box>
       {modalMode === 'view' && selectedParty ? (
-        <ViewDetails
-          data={selectedParty}
-          title={`Party [${selectedParty.id}]`}
-          detailsRef={detailsRef}
-        />
+        <>
+          <ViewDetails
+            data={selectedParty}
+            title={`Party Details - ${selectedParty.name}`}
+            detailsRef={detailsRef}
+            fields={fields}
+          />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => navigate('/party')}>
+              Back to Party List
+            </Button>
+          </Box>
+        </>
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h4">Party</Typography>
+            <Typography variant="h4">Party List</Typography>
             <Button
               variant="contained"
               startIcon={<PlusOutlined />}
               onClick={() => handleOpenModal('add')}
             >
-              Add New
+              Add New Party
             </Button>
           </Box>
           <SharedTable
             columns={columns}
-            data={paginatedData}
+            data={parties}
             onEdit={(party) => handleOpenModal('edit', party)}
             onView={(party) => handleOpenModal('view', party)}
             page={page}
@@ -151,15 +176,16 @@ const Party = () => {
         onClose={handleCloseModal}
         title={
           modalMode === 'add'
-            ? 'Party, Add New'
+            ? 'Add New Party'
             : modalMode === 'edit'
-            ? 'Party, Edit'
-            : 'Party, View'
+            ? 'Edit Party Details'
+            : 'View Party Details'
         }
         formData={formData}
         onChange={handleFormChange}
         onSubmit={handleSubmit}
         mode={modalMode}
+        fields={fields}
       />
     </Box>
   );

@@ -15,7 +15,7 @@ const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')))
 
 // Party module
 const Party = Loadable(lazy(() => import('../views/Party')));
-// const Product = Loadable(lazy(() => import('../views/Product')));
+const Product = Loadable(lazy(() => import('../views/Product')));
 // const Receivings = Loadable(lazy(() => import('../views/Receivings')));
 // const Processing = Loadable(lazy(() => import('../views/Processing')));
 // const ProcessingPayment = Loadable(lazy(() => import('../views/ProcessingPayment')));
@@ -60,7 +60,7 @@ const MainRoutes = {
       element: <SamplePage />,
     },
     { path: '/party', element: <Party /> },
-    // { path: '/product', element: <Product /> },
+    { path: '/product', element: <Product /> },
     // { path: '/receivings', element: <Receivings /> },
     // { path: '/processing', element: <Processing /> },
     // { path: '/processing-payment', element: <ProcessingPayment /> },

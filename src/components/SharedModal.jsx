@@ -8,10 +8,11 @@ import {
   FormControlLabel,
   Button,
   Grid,
+  MenuItem,
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import dayjs from 'dayjs'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
 
 const modalStyle = {
   position: 'absolute',
@@ -33,8 +34,86 @@ const SharedModal = ({
   onChange,
   onSubmit,
   mode,
+  fields, // New prop to define dynamic fields
 }) => {
   const isViewMode = mode === 'view';
+
+  const renderField = (field) => {
+    const { name, label, type = 'text', options, multiline, rows, required, xs = 12, sm } = field;
+    const value = formData[name];
+
+    if (type === 'select') {
+      return (
+        <TextField
+          select
+          label={label}
+          name={name}
+          value={value || ''}
+          onChange={onChange}
+          fullWidth
+          required={required}
+          disabled={isViewMode}
+        >
+          {options.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      );
+    }
+
+    if (type === 'date') {
+      return (
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label={label}
+            value={value ? dayjs(value) : null}
+            onChange={(date) =>
+              onChange({
+                target: {
+                  name,
+                  value: date ? date.format('YYYY-MM-DD') : '',
+                },
+              })
+            }
+            renderInput={(params) => <TextField {...params} fullWidth required={required} />}
+            disabled={isViewMode}
+          />
+        </LocalizationProvider>
+      );
+    }
+
+    if (type === 'checkbox') {
+      return (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={value || false}
+              onChange={(e) => onChange({ target: { name, value: e.target.checked } })}
+              disabled={isViewMode}
+            />
+          }
+          label={label}
+        />
+      );
+    }
+
+    return (
+      <TextField
+        label={label}
+        name={name}
+        type={type}
+        value={value || (type === 'number' ? 0 : '')}
+        onChange={onChange}
+        fullWidth
+        multiline={multiline}
+        rows={rows}
+        required={required}
+        disabled={isViewMode}
+      />
+    );
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -43,105 +122,11 @@ const SharedModal = ({
           {title}
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={onChange}
-              fullWidth
-              required
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Address"
-              name="address"
-              value={formData.address}
-              onChange={onChange}
-              fullWidth
-              multiline
-              rows={2}
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Contact Number"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={onChange}
-              fullWidth
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Discount %"
-              name="discount"
-              type="number"
-              value={formData.discount}
-              onChange={onChange}
-              fullWidth
-              required
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="Opening Balance Date"
-                value={formData.openingBalanceDate ? dayjs(formData.openingBalanceDate) : null}
-                onChange={(date) =>
-                  onChange({
-                    target: {
-                      name: 'openingBalanceDate',
-                      value: date ? date.format('YYYY-MM-DD') : '',
-                    },
-                  })
-                }
-                renderInput={(params) => <TextField {...params} fullWidth required />}
-                disabled={isViewMode}
-              />
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Opening Balance"
-              name="openingBalance"
-              type="number"
-              value={formData.openingBalance}
-              onChange={onChange}
-              fullWidth
-              required
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Remarks"
-              name="remarks"
-              value={formData.remarks}
-              onChange={onChange}
-              fullWidth
-              multiline
-              rows={2}
-              disabled={isViewMode}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.active}
-                  onChange={(e) => onChange({ target: { name: 'active', value: e.target.checked } })}
-                  disabled={isViewMode}
-                />
-              }
-              label="Active"
-            />
-          </Grid>
+          {fields.map((field) => (
+            <Grid item xs={field.xs || 12} sm={field.sm} key={field.name}>
+              {renderField(field)}
+            </Grid>
+          ))}
         </Grid>
         <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
           {!isViewMode && (

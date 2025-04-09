@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { partyApi } from './services/party'; // Use named import
-// import { productApi } from './services/product';
+import { productApi } from './services/product';
 // import { receivingsApi } from './services/receivings';
 // import { processingApi } from './services/processing';
 // import { processingPaymentApi } from './services/processingPayment';
@@ -12,7 +12,7 @@ import { partyApi } from './services/party'; // Use named import
 export const store = configureStore({
   reducer: {
     [partyApi.reducerPath]: partyApi.reducer,
-    // [productApi.reducerPath]: productApi.reducer,
+    [productApi.reducerPath]: productApi.reducer,
     // [receivingsApi.reducerPath]: receivingsApi.reducer,
     // [processingApi.reducerPath]: processingApi.reducer,
     // [processingPaymentApi.reducerPath]: processingPaymentApi.reducer,
@@ -23,7 +23,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat([
       partyApi.middleware,
-    //   productApi.middleware,
+      productApi.middleware,
     //   receivingsApi.middleware,
     //   processingApi.middleware,
     //   processingPaymentApi.middleware,
