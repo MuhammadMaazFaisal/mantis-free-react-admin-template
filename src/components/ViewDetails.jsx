@@ -1,119 +1,47 @@
-import React, { useRef } from 'react';
-import { Box, Typography, Button, Paper, Divider } from '@mui/material';
-import { DownloadOutlined } from '@ant-design/icons';
-import { useReactToPrint } from 'react-to-print';
+import React from 'react';
+import { Typography, Box, Grid, Paper } from '@mui/material';
 
-const ViewDetails = ({ data, title, detailsRef, fields }) => {
-  const handlePrint = useReactToPrint({
-    content: () => detailsRef.current,
-    documentTitle: `${title} Details`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 20mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-        }
-        .details-container {
-          padding: 20px;
-        }
-        .details-title {
-          font-size: 18px;
-          font-weight: bold;
-          margin-bottom: 16px;
-        }
-        .details-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 8px 0;
-          border-bottom: 1px solid #eee;
-        }
-        .details-label {
-          font-weight: 500;
-          font-size: 14px;
-        }
-        .details-value {
-          font-size: 14px;
-        }
-      }
-    `,
-  });
-
-  const renderValue = (key, value) => {
-    const field = fields.find((f) => f.name === key);
-    if (field && field.format) {
-      return field.format(value);
+const ViewDetails = ({ data, title, detailsRef, fields, renderCustomContent }) => {
+  // Helper function to convert a value to a string for display
+  const formatValueForDisplay = (value, fieldName) => {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0 ? `${value.length} items` : 'None';
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value); // Convert objects to JSON string
     }
     if (typeof value === 'boolean') {
       return value ? 'Yes' : 'No';
     }
-    return value || '-';
-  };
-
-  const renderLabel = (key) => {
-    const field = fields.find((f) => f.name === key);
-    return field ? field.label : key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+    return String(value);
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<DownloadOutlined />}
-          onClick={handlePrint}
-          size="small"
-        >
-          Download PDF
-        </Button>
-      </Box>
-      <Paper
-        sx={{
-          p: 3,
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundColor: '#fff',
-        }}
-        ref={detailsRef}
-        className="details-container"
-      >
-        <Typography
-          variant="h6"
-          sx={{ mb: 2, fontWeight: 'bold', color: '#1976d2' }}
-          className="details-title"
-        >
-          {title}
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        {Object.entries(data).map(([key, value]) => (
-          <Box
-            key={key}
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              py: 1,
-              borderBottom: '1px solid #eee',
-            }}
-            className="details-row"
-          >
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 500, color: '#424242' }}
-              className="details-label"
-            >
-              {renderLabel(key)}:
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: '#616161' }}
-              className="details-value"
-            >
-              {renderValue(key, value)}
-            </Typography>
-          </Box>
-        ))}
+    <Box ref={detailsRef}>
+      <Typography variant="h4" sx={{ mb: 3 }}>{title}</Typography>
+      <Paper elevation={1} sx={{ p: 2, mb: 3, borderRadius: '8px' }}>
+        <Grid container spacing={2}>
+          {fields.map((field) => (
+            <Grid item xs={12} sm={6} key={field.name}>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600 }}>
+                  {field.label}
+                </Typography>
+                <Typography sx={{ color: '#334155' }}>
+                  {formatValueForDisplay(data[field.name], field.name)}
+                </Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+        {/* Add spacing on top of the Paper component */}
+        <Box sx={{ mt: 3 }}>
+
+          {renderCustomContent && renderCustomContent({ data, isViewMode: true })}
+        </Box>
       </Paper>
     </Box>
   );

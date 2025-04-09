@@ -19,11 +19,19 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 600,
+  width: 800,
   bgcolor: 'background.paper',
   boxShadow: 24,
-  p: 4,
   borderRadius: 2,
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const contentStyle = {
+  p: 4,
+  maxHeight: '80vh',
+  overflowY: 'auto',
+  flex: 1,
 };
 
 const SharedModal = ({
@@ -34,7 +42,8 @@ const SharedModal = ({
   onChange,
   onSubmit,
   mode,
-  fields, // New prop to define dynamic fields
+  fields,
+  renderCustomContent,
 }) => {
   const isViewMode = mode === 'view';
 
@@ -118,17 +127,24 @@ const SharedModal = ({
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <Typography variant="h6" mb={3}>
-          {title}
-        </Typography>
-        <Grid container spacing={2}>
-          {fields.map((field) => (
-            <Grid item xs={field.xs || 12} sm={field.sm} key={field.name}>
-              {renderField(field)}
-            </Grid>
-          ))}
-        </Grid>
-        <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+        <Box sx={contentStyle}>
+          <Typography variant="h6" mb={3}>
+            {title}
+          </Typography>
+          <Grid container spacing={2}>
+            {fields.map((field) => (
+              <Grid item xs={field.xs || 12} sm={field.sm} key={field.name}>
+                {renderField(field)}
+              </Grid>
+            ))}
+          </Grid>
+          {renderCustomContent && (
+            <Box sx={{ mt: 3 }}>
+              {renderCustomContent({ formData, onChange, isViewMode })}
+            </Box>
+          )}
+        </Box>
+        <Box sx={{ p: 4, pt: 0, display: 'flex', gap: 2 }}>
           {!isViewMode && (
             <>
               <Button variant="contained" onClick={onSubmit}>

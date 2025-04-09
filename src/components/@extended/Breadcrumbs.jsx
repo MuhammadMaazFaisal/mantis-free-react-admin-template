@@ -224,11 +224,11 @@ export default function Breadcrumbs({
               </Grid>
             )}
             <Grid>{tempContent}</Grid>
-            {title && titleBottom && (
+            {/* {title && titleBottom && (
               <Grid sx={{ mt: card === false ? 0.25 : 1 }}>
                 <Typography variant="h2">{custom ? heading : item?.title}</Typography>
               </Grid>
-            )}
+            )} */}
           </Grid>
           {card === false && divider !== false && <Divider sx={{ mt: 2 }} />}
         </MainCard>

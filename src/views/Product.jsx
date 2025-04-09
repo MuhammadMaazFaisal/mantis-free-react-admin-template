@@ -182,7 +182,7 @@ const Product = () => {
             ) : (
                 <>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                        <Typography variant="h4">Product List</Typography>
+                        <Typography variant="h4">Product</Typography>
                         <Button
                             variant="contained"
                             startIcon={<PlusOutlined />}
