@@ -20,7 +20,8 @@ export default function AuthWrapper({ children }) {
       <AuthBackground />
       <Grid container direction="column" justifyContent="flex-end" sx={{ minHeight: '100vh' }}>
         <Grid sx={{ px: 3, mt: 3 }} size={12}>
-          <Logo to="/" />
+          {/* <Logo to="/" /> */}
+          <h2>Agar Global</h2>
         </Grid>
         <Grid size={12}>
           <Grid
