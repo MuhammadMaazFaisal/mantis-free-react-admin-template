@@ -19,11 +19,18 @@ const Party = Loadable(lazy(() => import('../views/Party')));
 const Product = Loadable(lazy(() => import('../views/Product')));
 const Receivings = Loadable(lazy(() => import('../views/Receivings')));
 const Processing = Loadable(lazy(() => import('../views/Processing')));
-// const ProcessingPayment = Loadable(lazy(() => import('../views/ProcessingPayment')));
-// const AdminExpenses = Loadable(lazy(() => import('../views/AdminExpenses')));
-// const Settings = Loadable(lazy(() => import('../views/Settings')));
-// const Reports = Loadable(lazy(() => import('../views/Reports')));
+const ProcessingPayment = Loadable(lazy(() => import('../views/ProcessingPayment')));
+const AdministrativeExpenses = Loadable(lazy(() => import('../views/AdministrativeExpenses')));
 
+// Settings sub-modules
+const ProductGroups = Loadable(lazy(() => import('../views/settings/ProductGroups')));
+const ChartsOfAccounts = Loadable(lazy(() => import('../views/settings/ChartsOfAccounts')));
+const Warehouses = Loadable(lazy(() => import('../views/settings/Warehouses')));
+const Locations = Loadable(lazy(() => import('../views/settings/Locations')));
+const Units = Loadable(lazy(() => import('../views/settings/Units')));
+const Config = Loadable(lazy(() => import('../views/settings/Config')));
+const ExpenseTypes = Loadable(lazy(() => import('../views/settings/ExpenseTypes')));
+const ChargesTypes = Loadable(lazy(() => import('../views/settings/ChargesTypes')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -68,10 +75,45 @@ const MainRoutes = {
     { path: '/product', element: <Product /> },
     { path: '/receivings', element: <Receivings /> },
     { path: '/processing', element: <Processing /> },
-    // { path: '/processing-payment', element: <ProcessingPayment /> },
-    // { path: '/admin-expenses', element: <AdminExpenses /> },
-    // { path: '/settings', element: <Settings /> },
-    // { path: '/reports', element: <Reports /> },
+    { path: '/processing-payment', element: <ProcessingPayment /> },
+    { path: '/administrative-expenses', element: <AdministrativeExpenses /> },
+    {
+      path: 'settings',
+      children: [
+        {
+          path: 'product-groups',
+          element: <ProductGroups />,
+        },
+        {
+          path: 'charts-of-accounts',
+          element: <ChartsOfAccounts />,
+        },
+        {
+          path: 'warehouses',
+          element: <Warehouses />,
+        },
+        {
+          path: 'locations',
+          element: <Locations />,
+        },
+        {
+          path: 'units',
+          element: <Units />,
+        },
+        {
+          path: 'config',
+          element: <Config />,
+        },
+        {
+          path: 'expense-types',
+          element: <ExpenseTypes />,
+        },
+        {
+          path: 'charges-types',
+          element: <ChargesTypes />,
+        },
+      ],
+    },
   ],
 };
 

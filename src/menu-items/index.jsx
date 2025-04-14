@@ -17,6 +17,13 @@ const modules = {
   type: 'group',
   children: [
     {
+      id: 'dashboard',
+      title: 'Dashboard',
+      type: 'item',
+      url: '/dashboard/default',
+      icon: UserOutlined,
+    },
+    {
       id: 'party',
       title: 'Party',
       type: 'item',
@@ -44,38 +51,82 @@ const modules = {
       url: '/processing',
       icon: ShoppingOutlined,
     },
-    // {
-    //   id: 'processing-payment',
-    //   title: 'Processing Payment',
-    //   type: 'item',
-    //   url: '/processing-payment',
-    //   icon: DownloadOutlined,
-    // },
-    // {
-    //   id: 'admin-expenses',
-    //   title: 'Admin Expenses',
-    //   type: 'item',
-    //   url: '/admin-expenses',
-    //   icon: FileTextOutlined,
-    // },
-    // {
-    //   id: 'settings',
-    //   title: 'Settings',
-    //   type: 'item',
-    //   url: '/settings',
-    //   icon: SettingOutlined,
-    // },
-    // {
-    //   id: 'reports',
-    //   title: 'Reports',
-    //   type: 'item',
-    //   url: '/reports',
-    //   icon: FileTextOutlined,
-    // },
+    {
+      id: 'processing-payment',
+      title: 'Processing Payment',
+      type: 'item',
+      url: '/processing-payment',
+      icon: DownloadOutlined,
+    },
+    {
+      id: 'administrative-expenses',
+      title: 'Administrative Expenses',
+      type: 'item',
+      url: '/administrative-expenses',
+      icon: FileTextOutlined,
+    },
+   
   ],
 };
+
+const settings =  {
+  id: 'settings',
+  title: 'Settings',
+  type: 'group',
+  children: [
+    {
+      id: 'product-groups',
+      title: 'Product Groups',
+      type: 'item',
+      url: '/settings/product-groups',
+    },
+    {
+      id: 'charts-of-accounts',
+      title: 'Charts of Accounts',
+      type: 'item',
+      url: '/settings/charts-of-accounts',
+    },
+    {
+      id: 'warehouses',
+      title: 'Warehouses',
+      type: 'item',
+      url: '/settings/warehouses',
+    },
+    {
+      id: 'locations',
+      title: 'Locations',
+      type: 'item',
+      url: '/settings/locations',
+    },
+    {
+      id: 'units',
+      title: 'Units',
+      type: 'item',
+      url: '/settings/units',
+    },
+    {
+      id: 'config',
+      title: 'Config',
+      type: 'item',
+      url: '/settings/config',
+    },
+    {
+      id: 'expense-types',
+      title: 'Expense Types',
+      type: 'item',
+      url: '/settings/expense-types',
+    },
+    {
+      id: 'charges-types',
+      title: 'Charges Types',
+      type: 'item',
+      url: '/settings/charges-types',
+    },
+  ],
+};
+
 const menuItems = {
-  items: [dashboard, modules]
+  items: [ modules, settings],
 };
 
 export default menuItems;
