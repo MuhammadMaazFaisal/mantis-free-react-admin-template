@@ -32,6 +32,13 @@ const Config = Loadable(lazy(() => import('../views/settings/Config')));
 const ExpenseTypes = Loadable(lazy(() => import('../views/settings/ExpenseTypes')));
 const ChargesTypes = Loadable(lazy(() => import('../views/settings/ChargesTypes')));
 
+// Reports sub-modules
+const StockReport = Loadable(lazy(() => import('../views/reports/StockReport')));
+const PartyLedger = Loadable(lazy(() => import('../views/reports/PartyLedger')));
+const LotLedger = Loadable(lazy(() => import('../views/reports/LotLedger')));
+const TrialBalanceReport = Loadable(lazy(() => import('../views/reports/TrialBalanceReport')));
+const ReceivableReport = Loadable(lazy(() => import('../views/reports/ReceivableReport')));
+
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -111,6 +118,31 @@ const MainRoutes = {
         {
           path: 'charges-types',
           element: <ChargesTypes />,
+        },
+      ],
+    },
+    {
+      path: 'reports',
+      children: [
+        {
+          path: 'stock-report',
+          element: <StockReport />,
+        },
+        {
+          path: 'party-ledger',
+          element: <PartyLedger />,
+        },
+        {
+          path: 'lot-ledger',
+          element: <LotLedger />,
+        },
+        {
+          path: 'trial-balance-report',
+          element: <TrialBalanceReport />,
+        },
+        {
+          path: 'receivable-report',
+          element: <ReceivableReport />,
         },
       ],
     },

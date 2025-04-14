@@ -9,6 +9,7 @@ import {
   DownloadOutlined,
   SettingOutlined,
   FileTextOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 
 const modules = {
@@ -125,8 +126,47 @@ const settings =  {
   ],
 };
 
+const reports = {
+  id: 'reports',
+  title: 'Reports',
+  type: 'group',
+  icon: FileSearchOutlined,
+  children: [
+    {
+      id: 'stock-report',
+      title: 'Stock Report',
+      type: 'item',
+      url: '/reports/stock-report',
+    },
+    {
+      id: 'party-ledger',
+      title: 'Party Ledger',
+      type: 'item',
+      url: '/reports/party-ledger',
+    },
+    {
+      id: 'lot-ledger',
+      title: 'Lot Ledger',
+      type: 'item',
+      url: '/reports/lot-ledger',
+    },
+    {
+      id: 'trial-balance-report',
+      title: 'Trial Balance Report',
+      type: 'item',
+      url: '/reports/trial-balance-report',
+    },
+    {
+      id: 'receivable-report',
+      title: 'Receivable Report',
+      type: 'item',
+      url: '/reports/receivable-report',
+    },
+  ],
+}
+
 const menuItems = {
-  items: [ modules, settings],
+  items: [ modules, settings,reports],
 };
 
 export default menuItems;
