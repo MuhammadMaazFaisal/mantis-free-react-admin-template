@@ -1,13 +1,14 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const BASE_URL = 'https://agar-global.test/api';
-export const commonBaseQuery = fetchBaseQuery({
-  baseUrl: BASE_URL, // only the base url is set here
+export const commonBaseQuery = (basePath) => fetchBaseQuery({
+  baseUrl: `https://agar-global.test/api/${basePath}`,
   prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth?.token || localStorage.getItem('token');
+    // Add authentication headers if needed (from prior authslice context)
+    const token = getState().auth.token; // Assuming authslice stores token
     if (token) {
-      headers.set('authorization', `Bearer ${token}`);
+      headers.set('Authorization', `Bearer ${token}`);
     }
+    headers.set('Content-Type', 'application/json');
     return headers;
   },
 });

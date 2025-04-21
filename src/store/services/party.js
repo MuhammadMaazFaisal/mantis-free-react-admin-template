@@ -3,17 +3,31 @@ import { commonBaseQuery } from './baseApi';
 
 export const partyApi = createApi({
   reducerPath: 'partyApi',
-  baseQuery: commonBaseQuery('party'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['Party'],
   endpoints: (builder) => ({
     getParties: builder.query({
       query: () => '/parties',
       providesTags: ['Party'],
-      transformResponse: (response) => response.data || [],
+      transformResponse: (response) => {
+        return response.data || [];
+      },
+      transformErrorResponse: (error) => {
+        console.error('getParties error:', error);
+        return error;
+      },
     }),
     getPartyById: builder.query({
       query: (id) => `/parties/${id}`,
       providesTags: ['Party'],
+      transformResponse: (response) => {
+        console.log('getPartyById response:', response);
+        return response.data || {};
+      },
+      transformErrorResponse: (error) => {
+        console.error('getPartyById error:', error);
+        return error;
+      },
     }),
     addParty: builder.mutation({
       query: (newParty) => ({
@@ -22,6 +36,14 @@ export const partyApi = createApi({
         body: newParty,
       }),
       invalidatesTags: ['Party'],
+      transformResponse: (response) => {
+        console.log('addParty response:', response);
+        return response.data;
+      },
+      transformErrorResponse: (error) => {
+        console.error('addParty error:', error);
+        return error;
+      },
     }),
     updateParty: builder.mutation({
       query: (updatedParty) => ({
@@ -30,6 +52,29 @@ export const partyApi = createApi({
         body: updatedParty,
       }),
       invalidatesTags: ['Party'],
+      transformResponse: (response) => {
+        console.log('updateParty response:', response);
+        return response.data;
+      },
+      transformErrorResponse: (error) => {
+        console.error('updateParty error:', error);
+        return error;
+      },
+    }),
+    deleteParty: builder.mutation({
+      query: (id) => ({
+        url: `/parties/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Party'],
+      transformResponse: (response) => {
+        console.log('deleteParty response:', response);
+        return response.data;
+      },
+      transformErrorResponse: (error) => {
+        console.error('deleteParty error:', error);
+        return error;
+      },
     }),
   }),
 });
@@ -39,4 +84,5 @@ export const {
   useGetPartyByIdQuery,
   useAddPartyMutation,
   useUpdatePartyMutation,
+  useDeletePartyMutation,
 } = partyApi;

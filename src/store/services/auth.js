@@ -1,13 +1,16 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { commonBaseQuery } from './baseApi';
 
+// Create a baseQuery for auth endpoints.
+const authBaseQuery = commonBaseQuery('auth');
+
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: commonBaseQuery,
+  baseQuery: authBaseQuery,
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials) => ({
-        url: '/auth/login',
+        url: '/login', // removed duplicate "auth" prefix
         method: 'POST',
         body: credentials,
       }),
