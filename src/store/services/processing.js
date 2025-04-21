@@ -1,17 +1,18 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { commonBaseQuery } from './baseApi';
 
 export const processingApi = createApi({
   reducerPath: 'processingApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:5000/api/' }),
+  baseQuery: commonBaseQuery,
   tagTypes: ['Processing'],
   endpoints: (builder) => ({
     getProcessings: builder.query({
-      query: () => 'processings',
+      query: () => '/processings',
       providesTags: ['Processing'],
     }),
     addProcessing: builder.mutation({
       query: (processing) => ({
-        url: 'processings',
+        url: '/processings',
         method: 'POST',
         body: processing,
       }),
@@ -19,7 +20,7 @@ export const processingApi = createApi({
     }),
     updateProcessing: builder.mutation({
       query: (processing) => ({
-        url: `processings/${processing.id}`,
+        url: `/processings/${processing.id}`,
         method: 'PUT',
         body: processing,
       }),

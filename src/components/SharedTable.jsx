@@ -86,8 +86,11 @@ const SharedTable = ({
     });
   };
 
+  // Ensure data is an array
+  const safeData = Array.isArray(data) ? data : [];
+
   const filteredData = useMemo(() => {
-    let result = [...data];
+    let result = [...safeData];
     if (search) {
       result = result.filter((row) =>
         columns.some((column) => {
@@ -97,7 +100,7 @@ const SharedTable = ({
       );
     }
     return result;
-  }, [data, search, columns]);
+  }, [safeData, search, columns]);
 
   const sortedData = useMemo(() => {
     const comparator = (a, b) => {

@@ -1,62 +1,34 @@
-import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { commonBaseQuery } from './baseApi';
 
 export const partyApi = createApi({
   reducerPath: 'partyApi',
-  baseQuery: fakeBaseQuery(),
+  baseQuery: commonBaseQuery('party'),
   tagTypes: ['Party'],
   endpoints: (builder) => ({
     getParties: builder.query({
-      queryFn: () => ({
-        data: [
-          {
-            id: 1,
-            name: 'S A Rice',
-            address: '',
-            contactNumber: '',
-            discount: 0.0,
-            openingBalanceDate: '2022-12-23',
-            openingBalance: 0.0,
-            remarks: '',
-            active: true,
-          },
-          {
-            id: 2,
-            name: 'Siraj Rice',
-            address: '',
-            contactNumber: '',
-            discount: 0.0,
-            openingBalanceDate: '2023-05-30',
-            openingBalance: 0.0,
-            remarks: '',
-            active: true,
-          },
-          // Add more dummy data as needed
-        ],
-      }),
+      query: () => '/parties',
       providesTags: ['Party'],
+      transformResponse: (response) => response.data || [],
     }),
     getPartyById: builder.query({
-      queryFn: (id) => ({
-        data: {
-          id,
-          name: `Party ${id}`,
-          address: '',
-          contactNumber: '',
-          discount: 0.0,
-          openingBalanceDate: '2023-10-12',
-          openingBalance: 0.0,
-          remarks: '',
-          active: true,
-        },
-      }),
+      query: (id) => `/parties/${id}`,
       providesTags: ['Party'],
     }),
     addParty: builder.mutation({
-      queryFn: (newParty) => ({ data: { ...newParty, id: Math.random() } }),
+      query: (newParty) => ({
+        url: '/parties',
+        method: 'POST',
+        body: newParty,
+      }),
       invalidatesTags: ['Party'],
     }),
     updateParty: builder.mutation({
-      queryFn: (updatedParty) => ({ data: updatedParty }),
+      query: (updatedParty) => ({
+        url: `/parties/${updatedParty.id}`,
+        method: 'PUT',
+        body: updatedParty,
+      }),
       invalidatesTags: ['Party'],
     }),
   }),

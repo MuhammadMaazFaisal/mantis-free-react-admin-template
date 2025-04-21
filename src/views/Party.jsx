@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 const Party = () => {
   const navigate = useNavigate();
   const { data: parties, isLoading } = useGetPartiesQuery();
+  console.log('Parties:', parties); // Debugging line to check the data
   const [addParty] = useAddPartyMutation();
   const [updateParty] = useUpdatePartyMutation();
 
@@ -44,22 +45,6 @@ const Party = () => {
     { name: 'active', label: 'Is Active', type: 'checkbox' },
   ];
 
-  const columns = [
-    { id: 'id', label: 'ID' },
-    { id: 'name', label: 'Party Name' },
-    { id: 'address', label: 'Address' },
-    { id: 'contactNumber', label: 'Contact Number' },
-    { id: 'discount', label: 'Discount (%)' },
-    { id: 'openingBalanceDate', label: 'Opening Balance Date' },
-    { id: 'openingBalance', label: 'Opening Balance (₹)' },
-    { id: 'remarks', label: 'Remarks' },
-    {
-      id: 'active',
-      label: 'Is Active',
-      format: (value) => (value ? 'Yes' : 'No'),
-    },
-  ];
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -86,10 +71,7 @@ const Party = () => {
         active: true,
       });
     }
-    if (mode !== 'view') {
-      setModalOpen(true);
-    }
-      
+    setModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -118,11 +100,11 @@ const Party = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (data) => {
     if (modalMode === 'add') {
-      addParty(formData);
+      addParty(data);
     } else if (modalMode === 'edit') {
-      updateParty({ ...formData, id: selectedParty.id });
+      updateParty({ ...data, id: selectedParty.id });
     }
     handleCloseModal();
   };
@@ -148,7 +130,7 @@ const Party = () => {
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h4">Party</Typography>
+            <Typography variant="h4">Party Management</Typography>
             <Button
               variant="contained"
               startIcon={<PlusOutlined />}
@@ -158,15 +140,16 @@ const Party = () => {
             </Button>
           </Box>
           <SharedTable
-            columns={columns}
+            columns={fields}
             data={parties}
+            isLoading={isLoading}
             onEdit={(party) => handleOpenModal('edit', party)}
             onView={(party) => handleOpenModal('view', party)}
             page={page}
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={parties.length}
+            totalRows={parties?.length || 0}
             tableRef={tableRef}
           />
         </>
