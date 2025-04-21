@@ -9,24 +9,19 @@ export const partyApi = createApi({
     getParties: builder.query({
       query: () => '/parties',
       providesTags: ['Party'],
-      transformResponse: (response) => {
-        return response.data || [];
-      },
-      transformErrorResponse: (error) => {
-        console.error('getParties error:', error);
-        return error;
+      transformResponse: (response) => response.success ? response.data : [],
+      transformErrorResponse: (error) => { 
+        console.error('getParties error:', error); 
+        return error; 
       },
     }),
     getPartyById: builder.query({
       query: (id) => `/parties/${id}`,
       providesTags: ['Party'],
-      transformResponse: (response) => {
-        console.log('getPartyById response:', response);
-        return response.data || {};
-      },
-      transformErrorResponse: (error) => {
-        console.error('getPartyById error:', error);
-        return error;
+      transformResponse: (response) => response.success ? response.data : {},
+      transformErrorResponse: (error) => { 
+        console.error('getPartyById error:', error); 
+        return error; 
       },
     }),
     addParty: builder.mutation({
@@ -36,13 +31,10 @@ export const partyApi = createApi({
         body: newParty,
       }),
       invalidatesTags: ['Party'],
-      transformResponse: (response) => {
-        console.log('addParty response:', response);
-        return response.data;
-      },
-      transformErrorResponse: (error) => {
-        console.error('addParty error:', error);
-        return error;
+      transformResponse: (response) => response.success ? response.data : {},
+      transformErrorResponse: (error) => { 
+        console.error('addParty error:', error); 
+        return error; 
       },
     }),
     updateParty: builder.mutation({
@@ -52,13 +44,10 @@ export const partyApi = createApi({
         body: updatedParty,
       }),
       invalidatesTags: ['Party'],
-      transformResponse: (response) => {
-        console.log('updateParty response:', response);
-        return response.data;
-      },
-      transformErrorResponse: (error) => {
-        console.error('updateParty error:', error);
-        return error;
+      transformResponse: (response) => response.success ? response.data : {},
+      transformErrorResponse: (error) => { 
+        console.error('updateParty error:', error); 
+        return error; 
       },
     }),
     deleteParty: builder.mutation({
@@ -67,13 +56,10 @@ export const partyApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Party'],
-      transformResponse: (response) => {
-        console.log('deleteParty response:', response);
-        return response.data;
-      },
-      transformErrorResponse: (error) => {
-        console.error('deleteParty error:', error);
-        return error;
+      transformResponse: (response) => response.success ? response.data : {},
+      transformErrorResponse: (error) => { 
+        console.error('deleteParty error:', error); 
+        return error; 
       },
     }),
   }),

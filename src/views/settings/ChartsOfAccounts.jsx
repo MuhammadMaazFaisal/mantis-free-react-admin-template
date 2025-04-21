@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import { useChartsOfAccountsQuery, useAddChartOfAccountMutation, useUpdateChartOfAccountMutation } from '../../store/services/settings';
 
 // Mock data for Charts of Accounts
 const mockChartsOfAccounts = [
@@ -22,6 +24,10 @@ const mockChartsOfAccounts = [
 ];
 
 const ChartsOfAccounts = () => {
+  const { data: chartsData = [], refetch } = useChartsOfAccountsQuery();
+  const [addChartOfAccount] = useAddChartOfAccountMutation();
+  const [updateChartOfAccount] = useUpdateChartOfAccountMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -134,12 +140,21 @@ const ChartsOfAccounts = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addChartOfAccount(formData);
+        toast.success('Chart of Account created successfully');
+      } else {
+        await updateChartOfAccount(formData);
+        toast.success('Chart of Account updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const chartsOfAccountsData = mockChartsOfAccounts || [];
 
   return (
     <Box>
@@ -155,7 +170,7 @@ const ChartsOfAccounts = () => {
       </Box>
       <SharedTable
         columns={columns}
-        data={chartsOfAccountsData}
+        data={chartsData}
         onEdit={(account) => {
           tableRef.current = null;
           handleOpenModal('edit', account);
@@ -164,7 +179,7 @@ const ChartsOfAccounts = () => {
         rowsPerPage={rowsPerPage}
         handleChangePage={handleChangePage}
         handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={chartsOfAccountsData.length}
+        totalRows={chartsData.length}
         tableRef={tableRef}
       />
       <SharedModal

@@ -1,36 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Locations
-const mockLocations = [
-  {
-    id: 1,
-    warehouse: 'Warehouse',
-    name: 'SA GODOWN',
-    details: '',
-    addedBy: 'Admin',
-    addedOn: '24/10/2022 22:43:44',
-    modifiedBy: 'Admin',
-    modifiedOn: '07/08/2023 13:56:15',
-    active: true,
-  },
-  {
-    id: 3,
-    warehouse: 'Warehouse',
-    name: 'PARTY GODOWN',
-    details: '',
-    addedBy: 'Admin',
-    addedOn: '19/10/2023 16:42:08',
-    modifiedBy: '',
-    modifiedOn: '',
-    active: true,
-  },
-];
+import { useLocationsQuery, useAddLocationMutation, useUpdateLocationMutation } from '../../store/services/settings';
 
 const Locations = () => {
+  const { data: locationsData = [], refetch } = useLocationsQuery();
+  const [addLocation] = useAddLocationMutation();
+  const [updateLocation] = useUpdateLocationMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -126,12 +106,21 @@ const Locations = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addLocation(formData);
+        toast.success('Location created successfully');
+      } else {
+        await updateLocation(formData);
+        toast.success('Location updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const locationsData = mockLocations || [];
 
   return (
     <Box>

@@ -1,22 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Charges Types
-const mockChargesTypes = [
-  { id: 1, name: 'Processing Charges' },
-  { id: 2, name: 'Packing Charges' },
-  { id: 3, name: 'Bardana Charges' },
-  { id: 4, name: 'HODI Loading' },
-  { id: 5, name: 'Loading/Unloading' },
-  { id: 6, name: 'Container Loading' },
-  { id: 7, name: 'Other Expense' },
-  { id: 8, name: 'Labour Overtime' },
-];
+import { useChargesTypesQuery, useAddChargeTypeMutation, useUpdateChargeTypeMutation } from '../../store/services/settings';
 
 const ChargesTypes = () => {
+  const { data: chargesData = [], refetch } = useChargesTypesQuery();
+  const [addChargeType] = useAddChargeTypeMutation();
+  const [updateChargeType] = useUpdateChargeTypeMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedChargeType, setSelectedChargeType] = useState(null);
@@ -70,12 +64,21 @@ const ChargesTypes = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addChargeType(formData);
+        toast.success('Charge Type created successfully');
+      } else {
+        await updateChargeType(formData);
+        toast.success('Charge Type updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const chargesTypesData = mockChargesTypes || [];
 
   return (
     <Box>
@@ -91,7 +94,7 @@ const ChargesTypes = () => {
       </Box>
       <SharedTable
         columns={columns}
-        data={chargesTypesData}
+        data={chargesData}
         onEdit={(chargeType) => {
           tableRef.current = null;
           handleOpenModal('edit', chargeType);
@@ -100,7 +103,7 @@ const ChargesTypes = () => {
         rowsPerPage={rowsPerPage}
         handleChangePage={handleChangePage}
         handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={chargesTypesData.length}
+        totalRows={chargesData.length}
         tableRef={tableRef}
       />
       <SharedModal

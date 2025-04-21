@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Expense Types
-const mockExpenseTypes = [
-  { id: 1, name: 'HODI Unloading' },
-];
+import { useExpenseTypesQuery, useAddExpenseTypeMutation, useUpdateExpenseTypeMutation } from '../../store/services/settings';
 
 const ExpenseTypes = () => {
+  const { data: expenseTypesData = [], refetch } = useExpenseTypesQuery();
+  const [addExpenseType] = useAddExpenseTypeMutation();
+  const [updateExpenseType] = useUpdateExpenseTypeMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedExpenseType, setSelectedExpenseType] = useState(null);
@@ -63,12 +64,21 @@ const ExpenseTypes = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addExpenseType(formData);
+        toast.success('Expense Type created successfully');
+      } else {
+        await updateExpenseType(formData);
+        toast.success('Expense Type updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const expenseTypesData = mockExpenseTypes || [];
 
   return (
     <Box>

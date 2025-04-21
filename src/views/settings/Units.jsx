@@ -1,24 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Units
-const mockUnits = [
-  {
-    id: 1,
-    name: 'Kg',
-    details: '',
-    addedBy: 'Admin',
-    addedOn: '16/07/2022 21:04:41',
-    modifiedBy: 'Admin',
-    modifiedOn: '04/04/2023 11:02:05',
-    active: true,
-  },
-];
+import { useUnitsQuery, useAddUnitMutation, useUpdateUnitMutation } from '../../store/services/settings';
 
 const Units = () => {
+  const { data: unitsData = [], refetch } = useUnitsQuery();
+  const [addUnit] = useAddUnitMutation();
+  const [updateUnit] = useUpdateUnitMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedUnit, setSelectedUnit] = useState(null);
@@ -99,12 +91,21 @@ const Units = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addUnit(formData);
+        toast.success('Unit created successfully');
+      } else {
+        await updateUnit(formData);
+        toast.success('Unit updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const unitsData = mockUnits || [];
 
   return (
     <Box>

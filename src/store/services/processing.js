@@ -3,30 +3,51 @@ import { commonBaseQuery } from './baseApi';
 
 export const processingApi = createApi({
   reducerPath: 'processingApi',
-  baseQuery: commonBaseQuery,
+  baseQuery: commonBaseQuery('processings'),
   tagTypes: ['Processing'],
   endpoints: (builder) => ({
     getProcessings: builder.query({
-      query: () => '/processings',
+      query: () => '/',
+      transformResponse: (response) => response.success ? response.data : [],
       providesTags: ['Processing'],
+    }),
+    getProcessingById: builder.query({
+      query: (id) => `/${id}`,
+      transformResponse: (response) => response.success ? response.data : {},
     }),
     addProcessing: builder.mutation({
       query: (processing) => ({
-        url: '/processings',
+        url: '/',
         method: 'POST',
         body: processing,
       }),
+      transformResponse: (response) => response.success ? response.data : {},
       invalidatesTags: ['Processing'],
     }),
     updateProcessing: builder.mutation({
       query: (processing) => ({
-        url: `/processings/${processing.id}`,
+        url: `/${processing.id}`,
         method: 'PUT',
         body: processing,
       }),
+      transformResponse: (response) => response.success ? response.data : {},
+      invalidatesTags: ['Processing'],
+    }),
+    deleteProcessing: builder.mutation({
+      query: (id) => ({
+        url: `/${id}`,
+        method: 'DELETE',
+      }),
+      transformResponse: (response) => response.success ? response.data : {},
       invalidatesTags: ['Processing'],
     }),
   }),
 });
 
-export const { useGetProcessingsQuery, useAddProcessingMutation, useUpdateProcessingMutation } = processingApi;
+export const { 
+  useGetProcessingsQuery, 
+  useGetProcessingByIdQuery,
+  useAddProcessingMutation, 
+  useUpdateProcessingMutation,
+  useDeleteProcessingMutation 
+} = processingApi;

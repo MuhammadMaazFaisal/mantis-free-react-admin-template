@@ -1,24 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Warehouses
-const mockWarehouses = [
-  {
-    id: 1,
-    name: 'SA GODOWN',
-    details: '',
-    addedBy: 'Admin',
-    addedOn: '22/06/2022 00:00:00',
-    modifiedBy: '',
-    modifiedOn: '',
-    active: true,
-  },
-];
+import { useWarehousesQuery, useAddWarehouseMutation, useUpdateWarehouseMutation } from '../../store/services/settings';
 
 const Warehouses = () => {
+  const { data: warehousesData = [], refetch } = useWarehousesQuery();
+  const [addWarehouse] = useAddWarehouseMutation();
+  const [updateWarehouse] = useUpdateWarehouseMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
@@ -99,12 +91,21 @@ const Warehouses = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addWarehouse(formData);
+        toast.success('Warehouse created successfully');
+      } else {
+        await updateWarehouse(formData);
+        toast.success('Warehouse updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const warehousesData = mockWarehouses || [];
 
   return (
     <Box>

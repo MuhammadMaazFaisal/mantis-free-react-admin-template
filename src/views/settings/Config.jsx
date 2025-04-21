@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography, Button, Box, TextField, Input } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
-// Mock data for Config
-const mockConfig = {
-  lotNumberSerial: '3006',
-  invoiceCycleInDays: '30',
-  invoiceCycleDueDays: '120',
-  companyFullName: 'SA Rice Mill',
-  companyShort: '',
-  logo: null,
-  contactNumber: '03212244574',
-  emails: 'icointernational@gmail.com',
-  address: 'Plot # 208 & 209 Yousuf Goth, Hub River Road Karachi',
-};
+import { useConfigQuery, useUpdateConfigMutation } from '../../store/services/settings';
 
 const Config = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(mockConfig);
+  const { data: configData = [] } = useConfigQuery();
+  const [updateConfig] = useUpdateConfigMutation();
+  const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    if (configData && configData.length) {
+      setFormData(configData[0]);
+    }
+  }, [configData]);
 
   const handleFormChange = (e) => {
     const { name, value, files } = e.target;
@@ -27,8 +23,8 @@ const Config = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
+  const handleSubmit = async () => {
+    await updateConfig(formData);
     navigate('/settings/config');
   };
 
@@ -39,7 +35,7 @@ const Config = () => {
         <TextField
           label="Lot Number Serial"
           name="lotNumberSerial"
-          value={formData.lotNumberSerial}
+          value={formData.lotNumberSerial || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -48,7 +44,7 @@ const Config = () => {
         <TextField
           label="Invoice Cycle In Days"
           name="invoiceCycleInDays"
-          value={formData.invoiceCycleInDays}
+          value={formData.invoiceCycleInDays || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -57,7 +53,7 @@ const Config = () => {
         <TextField
           label="Invoice Cycle Due Days"
           name="invoiceCycleDueDays"
-          value={formData.invoiceCycleDueDays}
+          value={formData.invoiceCycleDueDays || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -66,7 +62,7 @@ const Config = () => {
         <TextField
           label="Company Full Name"
           name="companyFullName"
-          value={formData.companyFullName}
+          value={formData.companyFullName || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -75,7 +71,7 @@ const Config = () => {
         <TextField
           label="Company Short"
           name="companyShort"
-          value={formData.companyShort}
+          value={formData.companyShort || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -93,7 +89,7 @@ const Config = () => {
         <TextField
           label="Contact Number"
           name="contactNumber"
-          value={formData.contactNumber}
+          value={formData.contactNumber || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -101,7 +97,7 @@ const Config = () => {
         <TextField
           label="Emails"
           name="emails"
-          value={formData.emails}
+          value={formData.emails || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -109,7 +105,7 @@ const Config = () => {
         <TextField
           label="Address"
           name="address"
-          value={formData.address}
+          value={formData.address || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"

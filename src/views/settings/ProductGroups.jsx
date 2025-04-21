@@ -1,17 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-
-// Mock data for Product Groups
-const mockProductGroups = [
-  { id: 1, name: 'Rice Raw' },
-  { id: 2, name: 'Rice Finish' },
-  { id: 3, name: 'Rice By Product' },
-];
+import { useProductGroupsQuery, useAddProductGroupMutation, useUpdateProductGroupMutation } from '../../store/services/settings';
 
 const ProductGroups = () => {
+  const { data: productGroupsData = [], refetch } = useProductGroupsQuery();
+  const [addProductGroup] = useAddProductGroupMutation();
+  const [updateProductGroup] = useUpdateProductGroupMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
   const [selectedProductGroup, setSelectedProductGroup] = useState(null);
@@ -65,12 +64,21 @@ const ProductGroups = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', formData);
-    handleCloseModal();
+  const handleSubmit = async () => {
+    try {
+      if (modalMode === 'add') {
+        await addProductGroup(formData);
+        toast.success('Product Group created successfully');
+      } else {
+        await updateProductGroup(formData);
+        toast.success('Product Group updated successfully');
+      }
+      await refetch();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.message || 'Operation failed');
+    }
   };
-
-  const productGroupsData = mockProductGroups || [];
 
   return (
     <Box>
