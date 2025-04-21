@@ -3,21 +3,21 @@ import { commonBaseQuery } from './baseApi';
 
 export const adminExpensesApi = createApi({
   reducerPath: 'adminExpensesApi',
-  baseQuery: commonBaseQuery('administrative-expenses'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['AdministrativeExpense'],
   endpoints: (builder) => ({
     getAdministrativeExpenses: builder.query({
-      query: () => '/',
+      query: () => 'administrative-expenses',
       transformResponse: (response) => response.success ? response.data : [],
       providesTags: ['AdministrativeExpense'],
     }),
     getAdministrativeExpenseById: builder.query({
-      query: (id) => `/${id}`,
+      query: (id) => `administrative-expenses/${id}`,
       transformResponse: (response) => response.success ? response.data : {},
     }),
     addAdministrativeExpense: builder.mutation({
       query: (newExpense) => ({
-        url: '/',
+        url: 'administrative-expenses',
         method: 'POST',
         body: newExpense,
       }),
@@ -26,7 +26,7 @@ export const adminExpensesApi = createApi({
     }),
     updateAdministrativeExpense: builder.mutation({
       query: (updatedExpense) => ({
-        url: `/${updatedExpense.id}`,
+        url: `administrative-expenses/${updatedExpense.id}`,
         method: 'PUT',
         body: updatedExpense,
       }),
@@ -35,7 +35,7 @@ export const adminExpensesApi = createApi({
     }),
     deleteAdministrativeExpense: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        url: `administrative-expenses/${id}`,
         method: 'DELETE',
       }),
       transformResponse: (response) => response.success ? response.data : {},

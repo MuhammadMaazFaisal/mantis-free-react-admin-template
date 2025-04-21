@@ -5,54 +5,34 @@ import { useNavigate } from 'react-router-dom';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
-
-// Mock data for administrative expenses
-const mockAdministrativeExpenses = [
-  {
-    id: 1,
-    date: '12/04/2025',
-    fromAccount: 'Cash in hand',
-    expenseAccount: 'Office Expenses',
-    total: 5000,
-    reference: 'Office supplies',
-    details: 'Purchased stationery for office use',
-  },
-  {
-    id: 2,
-    date: '11/04/2025',
-    fromAccount: 'Bank Account',
-    expenseAccount: 'Utilities',
-    total: 3000,
-    reference: 'Electricity bill',
-    details: 'Paid electricity bill for March 2025',
-  },
-  {
-    id: 3,
-    date: '10/04/2025',
-    fromAccount: 'Cash in hand',
-    expenseAccount: 'Travel Expenses',
-    total: 2000,
-    reference: 'Travel reimbursement',
-    details: 'Reimbursement for employee travel',
-  },
-];
+import { 
+  useGetAdministrativeExpensesQuery, 
+  useAddAdministrativeExpenseMutation, 
+  useUpdateAdministrativeExpenseMutation 
+} from '../store/services/adminExpenses';
 
 const AdministrativeExpenses = () => {
   const navigate = useNavigate();
 
-  // Use mock data instead of API for now
-  const administrativeExpenses = mockAdministrativeExpenses;
-  const isLoading = false;
-  const isError = false;
-  const error = null;
+  // Use API for administrative expenses; transform if needed
+  const { data: administrativeExpenses, isLoading, isError, error } = useGetAdministrativeExpensesQuery();
+  const formattedExpenses = administrativeExpenses.map(exp => ({
+    ...exp,
+    fromAccount: exp.from_account ? exp.from_account.account_name : '-',
+    expenseAccount: exp.expense_account ? exp.expense_account.account_name : '-'
+  }));
+
+  // Mutation hooks for adding/updating expense
+  const [addExpense] = useAddAdministrativeExpenseMutation();
+  const [updateExpense] = useUpdateAdministrativeExpenseMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', or 'view'
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [formData, setFormData] = useState({
     date: '',
-    fromAccount: '',
-    expenseAccount: '',
+    from_account_id: '',
+    expense_account_id: '',
     total: 0,
     reference: '',
     details: '',
@@ -64,29 +44,30 @@ const AdministrativeExpenses = () => {
   const tableRef = useRef();
   const detailsRef = useRef();
 
+  // Update form field keys for API
   const fields = [
     { name: 'date', label: 'Date', type: 'date', required: true, sm: 6 },
     {
-      name: 'fromAccount',
+      name: 'from_account_id',
       label: 'From Account',
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
-        { value: 'Cash in hand', label: 'Cash in hand' },
-        { value: 'Bank Account', label: 'Bank Account' },
+        { value: '1', label: 'Cash in hand' },
+        { value: '2', label: 'Bank Account' },
       ],
       required: true,
       sm: 6,
     },
     {
-      name: 'expenseAccount',
+      name: 'expense_account_id',
       label: 'Expense Account',
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
-        { value: 'Office Expenses', label: 'Office Expenses' },
-        { value: 'Utilities', label: 'Utilities' },
-        { value: 'Travel Expenses', label: 'Travel Expenses' },
+        { value: '1', label: 'Office Expenses' },
+        { value: '2', label: 'Utilities' },
+        { value: '3', label: 'Travel Expenses' },
       ],
       required: true,
       sm: 6,
@@ -105,8 +86,6 @@ const AdministrativeExpenses = () => {
     { id: 'reference', label: 'Reference' },
   ];
 
-  const viewFields = [...fields];
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -120,12 +99,20 @@ const AdministrativeExpenses = () => {
     setModalMode(mode);
     setSelectedExpense(expense);
     if (expense) {
-      setFormData(expense);
+      // Transform nested account objects into flat form fields for API:
+      setFormData({
+        date: expense.date,
+        from_account_id: expense.from_account ? expense.from_account.id.toString() : "",
+        expense_account_id: expense.expense_account ? expense.expense_account.id.toString() : "",
+        total: expense.total,
+        reference: expense.reference,
+        details: expense.details,
+      });
     } else {
       setFormData({
         date: '',
-        fromAccount: '',
-        expenseAccount: '',
+        from_account_id: '',
+        expense_account_id: '',
         total: 0,
         reference: '',
         details: '',
@@ -148,8 +135,8 @@ const AdministrativeExpenses = () => {
     if (e.reset) {
       setFormData({
         date: '',
-        fromAccount: '',
-        expenseAccount: '',
+        from_account_id: '',
+        expense_account_id: '',
         total: 0,
         reference: '',
         details: '',
@@ -164,9 +151,14 @@ const AdministrativeExpenses = () => {
   };
 
   const handleSubmit = () => {
-    // Simulate adding/editing expense (replace with API call if needed)
-    console.log('Submitting:', formData);
-    handleCloseModal();
+    // Call the API mutation according to the modal mode
+    if(modalMode === 'add'){
+      addExpense(formData).then(() => handleCloseModal());
+    } else if(modalMode === 'edit'){
+      updateExpense(formData).then(() => handleCloseModal());
+    } else {
+      handleCloseModal();
+    }
   };
 
   // Handle loading state
@@ -184,7 +176,7 @@ const AdministrativeExpenses = () => {
   }
 
   // Ensure administrativeExpenses is defined before rendering the table
-  const administrativeExpensesData = administrativeExpenses || [];
+  const administrativeExpensesData = formattedExpenses || [];
 
   return (
     <Box>
@@ -194,7 +186,7 @@ const AdministrativeExpenses = () => {
             data={selectedExpense}
             title={`Administrative Expense [${selectedExpense.id}]`}
             detailsRef={detailsRef}
-            fields={viewFields}
+            fields={fields}
           />
           <Box sx={{ mt: 2 }}>
             <Button variant="outlined" onClick={() => navigate('/administrative-expenses')}>
