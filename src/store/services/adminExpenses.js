@@ -1,8 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { commonBaseQuery } from './baseApi';
 
-export const administrativeExpensesApi = createApi({
-  reducerPath: 'administrativeExpensesApi',
+export const adminExpensesApi = createApi({
+  reducerPath: 'adminExpensesApi',
   baseQuery: commonBaseQuery('administrative-expenses'),
   tagTypes: ['AdministrativeExpense'],
   endpoints: (builder) => ({
@@ -50,4 +50,4 @@ export const {
   useAddAdministrativeExpenseMutation,
   useUpdateAdministrativeExpenseMutation,
   useDeleteAdministrativeExpenseMutation 
-} = administrativeExpensesApi;
+} = adminExpensesApi;

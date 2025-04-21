@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Button, Box, TextField, Input } from '@mui/material';
+import { Typography, Button, Box, TextField, Input, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useConfigQuery, useUpdateConfigMutation } from '../../store/services/settings';
 
 const Config = () => {
   const navigate = useNavigate();
-  const { data: configData = [] } = useConfigQuery();
-  const [updateConfig] = useUpdateConfigMutation();
-  const [formData, setFormData] = useState({});
+  const { data: configData, isLoading, isError, error } = useConfigQuery();
+  const [updateConfig, { isLoading: isUpdating }] = useUpdateConfigMutation();
+  
+  const [formData, setFormData] = useState({
+    lotNumberSerial: '',
+    invoiceCycleInDays: '',
+    invoiceCycleDueDays: '',
+    companyFullName: '',
+    companyShort: '',
+    contactNumber: '',
+    emails: '',
+    address: '',
+  });
 
   useEffect(() => {
-    if (configData && configData.length) {
+    if (configData && configData.length > 0) {
       setFormData(configData[0]);
     }
   }, [configData]);
@@ -24,9 +34,16 @@ const Config = () => {
   };
 
   const handleSubmit = async () => {
-    await updateConfig(formData);
-    navigate('/settings/config');
+    try {
+      await updateConfig(formData).unwrap();
+      navigate('/settings/config');
+    } catch (error) {
+      console.error('Error updating config:', error);
+    }
   };
+
+  if (isLoading) return <CircularProgress />;
+  if (isError) return <Alert severity="error">Error: {error.data?.message || 'Failed to load config'}</Alert>;
 
   return (
     <Box>
@@ -49,6 +66,7 @@ const Config = () => {
           fullWidth
           margin="normal"
           required
+          type="number"
         />
         <TextField
           label="Invoice Cycle Due Days"
@@ -58,6 +76,7 @@ const Config = () => {
           fullWidth
           margin="normal"
           required
+          type="number"
         />
         <TextField
           label="Company Full Name"
@@ -113,8 +132,12 @@ const Config = () => {
           rows={2}
         />
         <Box sx={{ mt: 2 }}>
-          <Button variant="contained" onClick={handleSubmit}>
-            Save
+          <Button 
+            variant="contained" 
+            onClick={handleSubmit}
+            disabled={isUpdating}
+          >
+            {isUpdating ? <CircularProgress size={24} /> : 'Save'}
           </Button>
         </Box>
       </Box>

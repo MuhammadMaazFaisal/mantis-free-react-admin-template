@@ -4,17 +4,25 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-import { useExpenseTypesQuery, useAddExpenseTypeMutation, useUpdateExpenseTypeMutation } from '../../store/services/settings';
+import { 
+  useExpenseTypesQuery, 
+  useAddExpenseTypeMutation, 
+  useUpdateExpenseTypeMutation,
+  useDeleteExpenseTypeMutation 
+} from '../../store/services/settings';
 
 const ExpenseTypes = () => {
-  const { data: expenseTypesData = [], refetch } = useExpenseTypesQuery();
+  const { data: expenseTypesData = [], isLoading, isError, error, refetch } = useExpenseTypesQuery();
   const [addExpenseType] = useAddExpenseTypeMutation();
   const [updateExpenseType] = useUpdateExpenseTypeMutation();
+  const [deleteExpenseType] = useDeleteExpenseTypeMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedExpenseType, setSelectedExpenseType] = useState(null);
   const [formData, setFormData] = useState({ name: '' });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -28,6 +36,8 @@ const ExpenseTypes = () => {
   const columns = [
     { id: 'id', label: 'ID' },
     { id: 'name', label: 'Name' },
+    { id: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleString() },
+    { id: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleString() },
   ];
 
   const handleChangePage = (event, newPage) => {
@@ -67,18 +77,39 @@ const ExpenseTypes = () => {
   const handleSubmit = async () => {
     try {
       if (modalMode === 'add') {
-        await addExpenseType(formData);
+        await addExpenseType(formData).unwrap();
         toast.success('Expense Type created successfully');
       } else {
-        await updateExpenseType(formData);
+        await updateExpenseType({ id: selectedExpenseType.id, ...formData }).unwrap();
         toast.success('Expense Type updated successfully');
       }
       await refetch();
       handleCloseModal();
     } catch (error) {
-      toast.error(error.message || 'Operation failed');
+      toast.error(error.data?.message || 'Operation failed');
     }
   };
+
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteExpenseType(itemToDelete.id).unwrap();
+      toast.success('Expense Type deleted successfully');
+      await refetch();
+    } catch (error) {
+      toast.error(error.data?.message || 'Delete failed');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
+    }
+  };
+
+  if (isLoading) return <Typography>Loading...</Typography>;
+  if (isError) return <Typography color="error">Error: {error.data?.message || 'Failed to load data'}</Typography>;
 
   return (
     <Box>
@@ -99,6 +130,7 @@ const ExpenseTypes = () => {
           tableRef.current = null;
           handleOpenModal('edit', expenseType);
         }}
+        onDelete={handleDelete}
         page={page}
         rowsPerPage={rowsPerPage}
         handleChangePage={handleChangePage}
@@ -120,6 +152,45 @@ const ExpenseTypes = () => {
         mode={modalMode}
         fields={fields}
       />
+      
+      {/* Delete confirmation dialog */}
+      {deleteConfirmOpen && (
+        <Box sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1300,
+        }}>
+          <Box sx={{
+            backgroundColor: 'background.paper',
+            p: 4,
+            borderRadius: 1,
+            maxWidth: 400,
+            width: '100%',
+          }}>
+            <Typography variant="h6" gutterBottom>
+              Confirm Delete
+            </Typography>
+            <Typography sx={{ mb: 3 }}>
+              Are you sure you want to delete "{itemToDelete?.name}"?
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="contained" color="error" onClick={confirmDelete}>
+                Delete
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

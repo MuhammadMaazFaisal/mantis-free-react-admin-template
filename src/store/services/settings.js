@@ -3,7 +3,7 @@ import { commonBaseQuery } from './baseApi';
 
 export const settingsApi = createApi({
   reducerPath: 'settingsApi',
-  baseQuery: commonBaseQuery('settings'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['Settings'],
   endpoints: (builder) => ({
     productGroups: builder.query({

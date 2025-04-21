@@ -4,32 +4,21 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
-import { useChartsOfAccountsQuery, useAddChartOfAccountMutation, useUpdateChartOfAccountMutation } from '../../store/services/settings';
-
-// Mock data for Charts of Accounts
-const mockChartsOfAccounts = [
-  { id: 1, nature: 'A', parent: '', accountCode: '1', accountName: 'Asset', isTransactionAccount: false },
-  { id: 6, nature: 'A', parent: 'Asset', accountCode: '1-01', accountName: 'Current Asset', isTransactionAccount: false },
-  { id: 8, nature: 'A', parent: 'Current Asset', accountCode: '1-01-01', accountName: 'Customers', isTransactionAccount: false },
-  { id: 106, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0001', accountName: 'SA Rice', isTransactionAccount: true },
-  { id: 107, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0002', accountName: 'Party 2', isTransactionAccount: true },
-  { id: 108, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0003', accountName: 'Siraj Rice', isTransactionAccount: true },
-  { id: 110, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0004', accountName: 'Kafaaf Enterprises', isTransactionAccount: true },
-  { id: 111, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0005', accountName: 'Zubair Enterprises', isTransactionAccount: true },
-  { id: 112, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0006', accountName: 'Barkha Traders', isTransactionAccount: true },
-  { id: 113, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0007', accountName: 'Younus Brothers', isTransactionAccount: true },
-  { id: 114, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0008', accountName: 'Buraidha Rice', isTransactionAccount: true },
-  { id: 115, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0009', accountName: 'Sami Ullah Shikarpur', isTransactionAccount: true },
-  { id: 116, nature: 'A', parent: 'Customers', accountCode: '1-01-01-0010', accountName: 'Ali Humza Rice', isTransactionAccount: true },
-];
+import { 
+  useChartsOfAccountsQuery, 
+  useAddChartOfAccountMutation, 
+  useUpdateChartOfAccountMutation,
+  useDeleteChartOfAccountMutation 
+} from '../../store/services/settings';
 
 const ChartsOfAccounts = () => {
-  const { data: chartsData = [], refetch } = useChartsOfAccountsQuery();
+  const { data: chartsData = [], isLoading, isError, error, refetch } = useChartsOfAccountsQuery();
   const [addChartOfAccount] = useAddChartOfAccountMutation();
   const [updateChartOfAccount] = useUpdateChartOfAccountMutation();
+  const [deleteChartOfAccount] = useDeleteChartOfAccountMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [formData, setFormData] = useState({
     nature: '',
@@ -38,6 +27,8 @@ const ChartsOfAccounts = () => {
     accountName: '',
     isTransactionAccount: false,
   });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -51,7 +42,11 @@ const ChartsOfAccounts = () => {
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
-        { value: 'A', label: 'A' },
+        { value: 'A', label: 'Asset' },
+        { value: 'L', label: 'Liability' },
+        { value: 'E', label: 'Equity' },
+        { value: 'R', label: 'Revenue' },
+        { value: 'X', label: 'Expense' },
       ],
       required: true,
       sm: 6,
@@ -62,9 +57,10 @@ const ChartsOfAccounts = () => {
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
-        { value: 'Asset', label: 'Asset' },
-        { value: 'Current Asset', label: 'Current Asset' },
-        { value: 'Customers', label: 'Customers' },
+        ...chartsData.map(account => ({
+          value: account.id,
+          label: `${account.accountCode} - ${account.accountName}`
+        }))
       ],
       sm: 6,
     },
@@ -81,7 +77,14 @@ const ChartsOfAccounts = () => {
   const columns = [
     { id: 'id', label: 'ID' },
     { id: 'nature', label: 'Nature' },
-    { id: 'parent', label: 'Parent Account' },
+    { 
+      id: 'parent', 
+      label: 'Parent Account',
+      format: (value, row) => {
+        const parent = chartsData.find(a => a.id === value);
+        return parent ? `${parent.accountCode} - ${parent.accountName}` : '-';
+      }
+    },
     { id: 'accountCode', label: 'Account Code' },
     { id: 'accountName', label: 'Account Name' },
     {
@@ -143,18 +146,39 @@ const ChartsOfAccounts = () => {
   const handleSubmit = async () => {
     try {
       if (modalMode === 'add') {
-        await addChartOfAccount(formData);
+        await addChartOfAccount(formData).unwrap();
         toast.success('Chart of Account created successfully');
       } else {
-        await updateChartOfAccount(formData);
+        await updateChartOfAccount({ id: selectedAccount.id, ...formData }).unwrap();
         toast.success('Chart of Account updated successfully');
       }
       await refetch();
       handleCloseModal();
     } catch (error) {
-      toast.error(error.message || 'Operation failed');
+      toast.error(error.data?.message || 'Operation failed');
     }
   };
+
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteChartOfAccount(itemToDelete.id).unwrap();
+      toast.success('Chart of Account deleted successfully');
+      await refetch();
+    } catch (error) {
+      toast.error(error.data?.message || 'Delete failed');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
+    }
+  };
+
+  if (isLoading) return <Typography>Loading...</Typography>;
+  if (isError) return <Typography color="error">Error: {error.data?.message || 'Failed to load data'}</Typography>;
 
   return (
     <Box>
@@ -175,6 +199,7 @@ const ChartsOfAccounts = () => {
           tableRef.current = null;
           handleOpenModal('edit', account);
         }}
+        onDelete={handleDelete}
         page={page}
         rowsPerPage={rowsPerPage}
         handleChangePage={handleChangePage}
@@ -196,6 +221,45 @@ const ChartsOfAccounts = () => {
         mode={modalMode}
         fields={fields}
       />
+      
+      {/* Delete confirmation dialog */}
+      {deleteConfirmOpen && (
+        <Box sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1300,
+        }}>
+          <Box sx={{
+            backgroundColor: 'background.paper',
+            p: 4,
+            borderRadius: 1,
+            maxWidth: 400,
+            width: '100%',
+          }}>
+            <Typography variant="h6" gutterBottom>
+              Confirm Delete
+            </Typography>
+            <Typography sx={{ mb: 3 }}>
+              Are you sure you want to delete "{itemToDelete?.accountName}"?
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="contained" color="error" onClick={confirmDelete}>
+                Delete
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
