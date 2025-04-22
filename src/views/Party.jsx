@@ -10,21 +10,20 @@ import { useNavigate } from 'react-router-dom';
 const Party = () => {
   const navigate = useNavigate();
   const { data: parties, isLoading, error, isError } = useGetPartiesQuery();
-  console.log('Parties:', parties);
   const [addParty, { isLoading: isAdding, error: addError }] = useAddPartyMutation();
   const [updateParty, { isLoading: isUpdating, error: updateError }] = useUpdatePartyMutation();
   const [deleteParty, { isLoading: isDeleting, error: deleteError }] = useDeletePartyMutation();
-
+  console.log('Parties:', parties);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
   const [selectedParty, setSelectedParty] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    contactNumber: '',
+    contact_number: '',
     discount: 0.0,
-    openingBalanceDate: '',
-    openingBalance: 0.0,
+    opening_balance_date: '',
+    opening_balance: 0.0,
     remarks: '',
     active: true,
   });
@@ -36,15 +35,21 @@ const Party = () => {
   const detailsRef = useRef();
 
   const fields = [
-    { name: 'name', label: 'Party Name', required: true },
-    { name: 'address', label: 'Address', multiline: true, rows: 2 },
-    { name: 'contactNumber', label: 'Contact Number', sm: 6 },
-    { name: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
-    { name: 'openingBalanceDate', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
-    { name: 'openingBalance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
-    { name: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
-    { name: 'active', label: 'Is Active', type: 'checkbox' },
+    { id: 'name', label: 'Party Name', required: true },
+    { id: 'address', label: 'Address', multiline: true, rows: 2 },
+    { id: 'contact_number', label: 'Contact Number', sm: 6 },
+    { id: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
+    { id: 'opening_balance_date', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
+    { id: 'opening_balance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
+    { id: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
+    { id: 'active', label: 'Is Active', type: 'checkbox', format: (value) => value === 1 },
   ];
+
+  // Transform API data to match table expectations
+  const transformedParties = parties?.map(party => ({
+    ...party,
+    active: party.active === 1 // Convert to boolean for checkbox
+  })) || [];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -61,16 +66,16 @@ const Party = () => {
     if (party) {
       setFormData({
         ...party,
-        openingBalanceDate: party.openingBalanceDate ? party.openingBalanceDate.split('T')[0] : '',
+        opening_balance_date: party.opening_balance_date ? party.opening_balance_date.split('T')[0] : '',
       });
     } else {
       setFormData({
         name: '',
         address: '',
-        contactNumber: '',
+        contact_number: '',
         discount: 0.0,
-        openingBalanceDate: '',
-        openingBalance: 0.0,
+        opening_balance_date: '',
+        opening_balance: 0.0,
         remarks: '',
         active: true,
       });
@@ -82,7 +87,7 @@ const Party = () => {
     setModalOpen(false);
     setSelectedParty(null);
     if (modalMode === 'view') {
-      navigate('/parties');
+      navigate('/party');
     }
   };
 
@@ -91,10 +96,10 @@ const Party = () => {
       setFormData({
         name: '',
         address: '',
-        contactNumber: '',
+        contact_number: '',
         discount: 0.0,
-        openingBalanceDate: '',
-        openingBalance: 0.0,
+        opening_balance_date: '',
+        opening_balance: 0.0,
         remarks: '',
         active: true,
       });
@@ -109,11 +114,17 @@ const Party = () => {
 
   const handleSubmit = async (data) => {
     try {
+      // Prepare data for API
+      const apiData = {
+        ...data,
+        active: data.active ? 1 : 0 // Convert boolean back to 1/0 for API
+      };
+
       if (modalMode === 'add') {
-        await addParty(data).unwrap();
+        await addParty(apiData).unwrap();
         console.log('Party added successfully');
       } else if (modalMode === 'edit') {
-        await updateParty({ ...data, id: selectedParty.id }).unwrap();
+        await updateParty({ ...apiData, id: selectedParty.id }).unwrap();
         console.log('Party updated successfully');
       }
       handleCloseModal();
@@ -172,7 +183,7 @@ const Party = () => {
           </Box>
           <SharedTable
             columns={fields}
-            data={parties || []}
+            data={transformedParties}
             isLoading={isLoading}
             onEdit={(party) => handleOpenModal('edit', party)}
             onView={(party) => handleOpenModal('view', party)}
@@ -181,7 +192,7 @@ const Party = () => {
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={parties?.length || 0}
+            totalRows={transformedParties?.length || 0}
             tableRef={tableRef}
           />
         </>
