@@ -94,7 +94,7 @@ const SharedTable = ({
     if (search) {
       result = result.filter((row) =>
         columns.some((column) => {
-          const value = row[column.id];
+          const value = column.render ? column.render(row) : row[column.id];
           return value && value.toString().toLowerCase().includes(search.toLowerCase());
         })
       );
@@ -104,8 +104,8 @@ const SharedTable = ({
 
   const sortedData = useMemo(() => {
     const comparator = (a, b) => {
-      const aValue = a[orderBy];
-      const bValue = b[orderBy];
+      const aValue = column.render ? column.render(a) : a[orderBy];
+      const bValue = column.render ? column.render(b) : b[orderBy];
       if (aValue < bValue) return order === 'asc' ? -1 : 1;
       if (aValue > bValue) return order === 'asc' ? 1 : -1;
       return 0;
@@ -146,27 +146,18 @@ const SharedTable = ({
                 borderColor: '#90caf9',
               },
               '& input': {
-                padding: '8px 12px', // Adjust padding for better alignment
+                padding: '8px 12px',
                 fontSize: '0.85rem',
               },
             },
             '& .MuiInputLabel-root': {
               color: '#666',
               fontSize: '0.85rem',
-              transform: 'translate(12px, 8px) scale(1)', // Align label properly
+              transform: 'translate(12px, 8px) scale(1)',
               '&.MuiInputLabel-shrink': {
-                transform: 'translate(12px, -6px) scale(0.75)', // Adjust when shrunk
+                transform: 'translate(12px, -6px) scale(0.75)',
               },
             },
-            // align label properly
-            '& .MuiInputLabel-sizeSmall': {
-              lineHeight: '1.75rem !important',
-            },
-            '& .MuiInputLabel-shrink': {
-             top: '-5px !important',
-            },
-
-            
           }}
         />
         <Button
@@ -204,8 +195,8 @@ const SharedTable = ({
           <TableHead>
             <TableRow
               sx={{
-                backgroundColor: '#f1f5f9', // Subtle grayish-blue for header
-                color: '#1e293b', // Dark slate for text
+                backgroundColor: '#f1f5f9',
+                color: '#1e293b',
               }}
             >
               {hasSubTable && (
@@ -283,7 +274,7 @@ const SharedTable = ({
                         transition: 'background-color 0.2s ease-in-out',
                       },
                       '&:last-child td': {
-                        borderBottom: 'none', // Remove border for last row
+                        borderBottom: 'none',
                       },
                     }}
                   >
@@ -332,7 +323,7 @@ const SharedTable = ({
                           color: '#334155',
                         }}
                       >
-                        {column.format ? column.format(row[column.id]) : row[column.id]}
+                        {column.render ? column.render(row) : row[column.id]}
                       </TableCell>
                     ))}
                     <TableCell

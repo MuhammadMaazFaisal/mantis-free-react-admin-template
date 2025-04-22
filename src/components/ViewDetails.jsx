@@ -31,7 +31,9 @@ const ViewDetails = ({ data, title, detailsRef, fields, renderCustomContent }) =
                   {field.label}
                 </Typography>
                 <Typography sx={{ color: '#334155' }}>
-                  {formatValueForDisplay(data[field.name], field.name)}
+                  {field.render 
+                    ? field.render(data) 
+                    : formatValueForDisplay(data[field.name], field.name)}
                 </Typography>
               </Box>
             </Grid>
@@ -39,7 +41,6 @@ const ViewDetails = ({ data, title, detailsRef, fields, renderCustomContent }) =
         </Grid>
         {/* Add spacing on top of the Paper component */}
         <Box sx={{ mt: 3 }}>
-
           {renderCustomContent && renderCustomContent({ data, isViewMode: true })}
         </Box>
       </Paper>

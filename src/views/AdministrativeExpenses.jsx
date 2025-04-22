@@ -14,14 +14,9 @@ import {
 const AdministrativeExpenses = () => {
   const navigate = useNavigate();
 
-  // Use API for administrative expenses; transform if needed
+  // Use API for administrative expenses
   const { data: administrativeExpenses, isLoading, isError, error } = useGetAdministrativeExpensesQuery();
-  const formattedExpenses = administrativeExpenses.map(exp => ({
-    ...exp,
-    fromAccount: exp.from_account ? exp.from_account.account_name : '-',
-    expenseAccount: exp.expense_account ? exp.expense_account.account_name : '-'
-  }));
-
+  
   // Mutation hooks for adding/updating expense
   const [addExpense] = useAddAdministrativeExpenseMutation();
   const [updateExpense] = useUpdateAdministrativeExpenseMutation();
@@ -175,8 +170,12 @@ const AdministrativeExpenses = () => {
     );
   }
 
-  // Ensure administrativeExpenses is defined before rendering the table
-  const administrativeExpensesData = formattedExpenses || [];
+  // Format the expenses only when data is available
+  const formattedExpenses = administrativeExpenses?.map(exp => ({
+    ...exp,
+    fromAccount: exp.from_account ? exp.from_account.account_name : '-',
+    expenseAccount: exp.expense_account ? exp.expense_account.account_name : '-'
+  })) || [];
 
   return (
     <Box>
@@ -208,7 +207,7 @@ const AdministrativeExpenses = () => {
           </Box>
           <SharedTable
             columns={columns}
-            data={administrativeExpensesData}
+            data={formattedExpenses}
             onEdit={(expense) => {
               tableRef.current = null;
               handleOpenModal('edit', expense);
@@ -221,7 +220,7 @@ const AdministrativeExpenses = () => {
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={administrativeExpensesData.length}
+            totalRows={formattedExpenses.length}
             tableRef={tableRef}
           />
         </>

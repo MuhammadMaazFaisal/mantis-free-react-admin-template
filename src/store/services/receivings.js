@@ -3,22 +3,22 @@ import { commonBaseQuery } from './baseApi';
 
 export const receivingsApi = createApi({
   reducerPath: 'receivingsApi',
-  baseQuery: commonBaseQuery('receivings'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['Receiving'],
   endpoints: (builder) => ({
     getReceivings: builder.query({
-      query: () => '/',
+      query: () => 'receivings',
       transformResponse: (response) => response.success ? response.data : [],
       providesTags: ['Receiving'],
     }),
     getReceivingById: builder.query({
-      query: (id) => `/${id}`,
+      query: (id) => `receivings/${id}`,
       transformResponse: (response) => response.success ? response.data : {},
       providesTags: (result, error, id) => [{ type: 'Receiving', id }],
     }),
     addReceiving: builder.mutation({
       query: (newReceiving) => ({
-        url: '/',
+        url: 'receivings',
         method: 'POST',
         body: newReceiving,
       }),
@@ -27,7 +27,7 @@ export const receivingsApi = createApi({
     }),
     updateReceiving: builder.mutation({
       query: (updatedReceiving) => ({
-        url: `/${updatedReceiving.id}`,
+        url: `receivings/${updatedReceiving.id}`,
         method: 'PUT',
         body: updatedReceiving,
       }),
@@ -36,7 +36,7 @@ export const receivingsApi = createApi({
     }),
     deleteReceiving: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        url: `receivings/${id}`,
         method: 'DELETE',
       }),
       transformResponse: (response) => response.success ? response.data : {},

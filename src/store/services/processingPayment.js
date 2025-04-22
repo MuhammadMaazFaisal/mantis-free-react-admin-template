@@ -3,21 +3,21 @@ import { commonBaseQuery } from './baseApi';
 
 export const processingPaymentApi = createApi({
 	reducerPath: 'processingPaymentApi',
-	baseQuery: commonBaseQuery('processing-payments'),
+	baseQuery: commonBaseQuery(''),
 	tagTypes: ['ProcessingPayment'],
 	endpoints: (builder) => ({
 		getProcessingPayments: builder.query({
-			query: () => '/',
+			query: () => 'processing-payments',
 			transformResponse: (response) => response.success ? response.data : [],
 			providesTags: ['ProcessingPayment'],
 		}),
 		getProcessingPaymentById: builder.query({
-			query: (id) => `/${id}`,
+			query: (id) => `processing-payments/${id}`,
 			transformResponse: (response) => response.success ? response.data : {},
 		}),
 		addProcessingPayment: builder.mutation({
 			query: (newPayment) => ({
-				url: '/',
+				url: 'processing-payments',
 				method: 'POST',
 				body: newPayment,
 			}),
@@ -26,7 +26,7 @@ export const processingPaymentApi = createApi({
 		}),
 		updateProcessingPayment: builder.mutation({
 			query: (updatedPayment) => ({
-				url: `/${updatedPayment.id}`,
+				url: `processing-payments/${updatedPayment.id}`,
 				method: 'PUT',
 				body: updatedPayment,
 			}),
@@ -35,7 +35,7 @@ export const processingPaymentApi = createApi({
 		}),
 		deleteProcessingPayment: builder.mutation({
 			query: (id) => ({
-				url: `/${id}`,
+				url: `processing-payments/${id}`,
 				method: 'DELETE',
 			}),
 			transformResponse: (response) => response.success ? response.data : {},
