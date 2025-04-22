@@ -85,10 +85,10 @@ const ChartsOfAccounts = () => {
         return parent ? `${parent.accountCode} - ${parent.accountName}` : '-';
       }
     },
-    { id: 'accountCode', label: 'Account Code' },
-    { id: 'accountName', label: 'Account Name' },
+    { id: 'account_code', label: 'Account Code' },
+    { id: 'account_name', label: 'Account Name' },
     {
-      id: 'isTransactionAccount',
+      id: 'is_transaction_account',
       label: 'Is Transaction Account',
       format: (value) => (value ? 'Yes' : 'No'),
     },

@@ -18,15 +18,15 @@ const Receivings = () => {
   const [modalMode, setModalMode] = useState('add');
   const [selectedReceiving, setSelectedReceiving] = useState(null);
   const [formData, setFormData] = useState({
-    lotNumber: '',
-    arrivalDate: '',
+    lot_number: '',
+    arrival_date: '',
     party: '',
-    receivingType: '',
-    fileNumber: '',
+    receiving_type: '',
+    file_number: '',
     remarks: '',
     total: 0.0,
-    discountPercent: 0.0,
-    grandTotal: 0.0,
+    discount_percent: 0.0,
+    grand_total: 0.0,
     active: true,
     details: [],
   });
@@ -38,8 +38,8 @@ const Receivings = () => {
   const detailsRef = useRef();
 
   const fields = [
-    { name: 'lotNumber', label: 'Lot Number', required: true, sm: 6 },
-    { name: 'arrivalDate', label: 'Arrival Date', type: 'date', required: true, sm: 6 },
+    { name: 'lot_number', label: 'Lot Number', required: true, sm: 6 },
+    { name: 'arrival_date', label: 'Arrival Date', type: 'date', required: true, sm: 6 },
     {
       name: 'party',
       label: 'Party',
@@ -53,7 +53,7 @@ const Receivings = () => {
       sm: 6,
     },
     {
-      name: 'receivingType',
+      name: 'receiving_type',
       label: 'Receiving Type',
       type: 'select',
       options: [
@@ -63,11 +63,11 @@ const Receivings = () => {
       required: true,
       sm: 6,
     },
-    { name: 'fileNumber', label: 'File Number', sm: 6 },
+    { name: 'file_number', label: 'File Number', sm: 6 },
     { name: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
     { name: 'total', label: 'Total (₹)', type: 'number', required: true, sm: 6 },
-    { name: 'discountPercent', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
-    { name: 'grandTotal', label: 'Grand Total (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'discount_percent', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
+    { name: 'grand_total', label: 'Grand Total (₹)', type: 'number', required: true, sm: 6 },
     { name: 'active', label: 'Is Active', type: 'checkbox' },
   ];
 
@@ -75,35 +75,34 @@ const Receivings = () => {
     return {
       ...receiving,
       party: receiving.party?.name || '',
-      arrivalDate: receiving.arrival_date || receiving.arrivalDate,
-      active: receiving.active === 1 || receiving.active === true
+      active: receiving.active === 1 || receiving.active === true,
     };
   };
 
   const columns = [
     { id: 'id', label: 'ID' },
-    { 
-      id: 'arrivalDate', 
+    {
+      id: 'arrival_date',
       label: 'Arrival Date',
       format: (value) => new Date(value).toLocaleDateString()
     },
     { id: 'party', label: 'Party' },
-    { id: 'receivingType', label: 'Receiving Type' },
-    { id: 'lotNumber', label: 'Lot #' },
-    { id: 'fileNumber', label: 'File #' },
+    { id: 'receiving_type', label: 'Receiving Type' },
+    { id: 'lot_number', label: 'Lot #' },
+    { id: 'file_number', label: 'File #' },
     { id: 'remarks', label: 'Remarks' },
-    { 
-      id: 'total', 
+    {
+      id: 'total',
       label: 'Total (₹)',
       format: (value) => parseFloat(value).toFixed(2)
     },
-    { 
-      id: 'discountPercent', 
+    {
+      id: 'discount_percent',
       label: 'Discount (%)',
       format: (value) => parseFloat(value).toFixed(2)
     },
-    { 
-      id: 'grandTotal', 
+    {
+      id: 'grand_total',
       label: 'Grand Total (₹)',
       format: (value) => parseFloat(value).toFixed(2)
     },
@@ -116,12 +115,12 @@ const Receivings = () => {
 
   const viewFields = [
     ...fields,
-    { name: 'lastInvoiceDate', label: 'Last Invoice Date' },
-    { name: 'nextInvoiceDate', label: 'Next Invoice Date' },
-    { name: 'addedBy', label: 'Added By' },
-    { name: 'addedOn', label: 'Added On' },
-    { name: 'modifiedBy', label: 'Modified By' },
-    { name: 'modifiedOn', label: 'Modified On' },
+    { name: 'last_invoice_date', label: 'Last Invoice Date' },
+    { name: 'next_invoice_date', label: 'Next Invoice Date' },
+    { name: 'added_by', label: 'Added By' },
+    { name: 'added_on', label: 'Added On' },
+    { name: 'modified_by', label: 'Modified By' },
+    { name: 'modified_on', label: 'Modified On' },
     { name: 'status', label: 'Status' },
   ];
 
@@ -151,15 +150,15 @@ const Receivings = () => {
       setFormData(formatReceivingData(receiving));
     } else {
       setFormData({
-        lotNumber: '',
-        arrivalDate: '',
+        lot_number: '',
+        arrival_date: '',
         party: '',
-        receivingType: '',
-        fileNumber: '',
+        receiving_type: '',
+        file_number: '',
         remarks: '',
         total: 0.0,
-        discountPercent: 0.0,
-        grandTotal: 0.0,
+        discount_percent: 0.0,
+        grand_total: 0.0,
         active: true,
         details: [],
       });
@@ -180,15 +179,15 @@ const Receivings = () => {
   const handleFormChange = (e) => {
     if (e.reset) {
       setFormData({
-        lotNumber: '',
-        arrivalDate: '',
+        lot_number: '',
+        arrival_date: '',
         party: '',
-        receivingType: '',
-        fileNumber: '',
+        receiving_type: '',
+        file_number: '',
         remarks: '',
         total: 0.0,
-        discountPercent: 0.0,
-        grandTotal: 0.0,
+        discount_percent: 0.0,
+        grand_total: 0.0,
         active: true,
         details: [],
       });
@@ -249,11 +248,7 @@ const Receivings = () => {
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
             <Typography variant="h4">Receiving</Typography>
-            <Button
-              variant="contained"
-              startIcon={<PlusOutlined />}
-              onClick={() => handleOpenModal('add')}
-            >
+            <Button variant="contained" startIcon={<PlusOutlined />} onClick={() => handleOpenModal('add')}>
               Add New Receiving
             </Button>
           </Box>

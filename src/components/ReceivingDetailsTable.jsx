@@ -9,38 +9,27 @@ import {
   Paper,
   IconButton,
   TextField,
-  MenuItem,
   Box,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
   const [newDetail, setNewDetail] = useState({
-    location: '',
     product: '',
-    unit: '',
-    qty: 0,
+    quantity: 0,
     rate: 0,
     amount: 0,
     weight: 0,
-    invRate: 0,
-    fortyKgRate: 0,
-    vehicleNo: '',
   });
 
   const handleAddDetail = () => {
     onChange([...details, newDetail]);
     setNewDetail({
-      location: '',
       product: '',
-      unit: '',
-      qty: 0,
+      quantity: 0,
       rate: 0,
       amount: 0,
       weight: 0,
-      invRate: 0,
-      fortyKgRate: 0,
-      vehicleNo: '',
     });
   };
 
@@ -54,13 +43,12 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
     setNewDetail((prev) => ({
       ...prev,
       [name]: value,
-      amount: name === 'qty' || name === 'rate' ? 
-        (name === 'qty' ? value * prev.rate : prev.qty * value) : 
-        prev.amount,
+      amount: (name === 'quantity' || name === 'rate')
+        ? (name === 'quantity' ? value * prev.rate : prev.quantity * value)
+        : prev.amount,
     }));
   };
 
-  // Helper function to safely get product name
   const getProductName = (product) => {
     if (!product) return '';
     if (typeof product === 'string') return product;
@@ -68,28 +56,15 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
   };
 
   return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        borderRadius: '8px',
-        border: '1px solid #e8ecef',
-        boxShadow: 'none',
-      }}
-    >
+    <TableContainer component={Paper} sx={{ borderRadius: '8px', border: '1px solid #e8ecef', boxShadow: 'none' }}>
       <Table sx={{ minWidth: 650, borderCollapse: 'separate', borderSpacing: 0 }}>
         <TableHead>
           <TableRow sx={{ backgroundColor: '#f1f5f9', color: '#1e293b' }}>
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              Location
-            </TableCell>
-            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Product
             </TableCell>
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              Unit
-            </TableCell>
-            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              Qty
+              Quantity
             </TableCell>
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Rate
@@ -100,15 +75,6 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Weight
             </TableCell>
-            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              Inv Rate
-            </TableCell>
-            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              40kg Rate
-            </TableCell>
-            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-              Vehicle No
-            </TableCell>
             {!isViewMode && (
               <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Actions
@@ -118,51 +84,25 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
         </TableHead>
         <TableBody>
           {details.map((detail, index) => (
-            <TableRow
-              key={index}
-              sx={{
-                backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa',
-                '&:hover': { backgroundColor: '#f8fafc' },
-                '&:last-child td': { borderBottom: 'none' },
-              }}
-            >
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.location}
-              </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
+            <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }, '&:last-child td': { borderBottom: 'none' } }}>
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {getProductName(detail.product)}
               </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.unit}
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
+                {detail.quantity}
               </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.qty}
-              </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.rate}
               </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.amount}
               </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.weight}
-              </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.invRate}
-              </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.fortyKgRate}
-              </TableCell>
-              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
-                {detail.vehicleNo}
               </TableCell>
               {!isViewMode && (
                 <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-                  <IconButton
-                    onClick={() => handleDeleteDetail(index)}
-                    size="small"
-                    sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' } }}
-                  >
+                  <IconButton onClick={() => handleDeleteDetail(index)} size="small" sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' } }}>
                     <DeleteOutlined style={{ fontSize: '16px' }} />
                   </IconButton>
                 </TableCell>
@@ -175,14 +115,6 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
         <Box sx={{ p: 2, borderTop: '1px solid #e8ecef' }}>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <TextField
-              label="Location"
-              name="location"
-              value={newDetail.location}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            />
-            <TextField
               label="Product"
               name="product"
               value={newDetail.product}
@@ -191,22 +123,10 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
             />
             <TextField
-              label="Unit"
-              name="unit"
-              value={newDetail.unit}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
-              sx={{ width: 100, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            >
-              <MenuItem value="Kg">Kg</MenuItem>
-              <MenuItem value="Ton">Ton</MenuItem>
-            </TextField>
-            <TextField
-              label="Qty"
-              name="qty"
+              label="Quantity"
+              name="quantity"
               type="number"
-              value={newDetail.qty}
+              value={newDetail.quantity}
               onChange={handleNewDetailChange}
               size="small"
               sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
@@ -238,37 +158,7 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
               size="small"
               sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
             />
-            <TextField
-              label="Inv Rate"
-              name="invRate"
-              type="number"
-              value={newDetail.invRate}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            />
-            <TextField
-              label="40kg Rate"
-              name="fortyKgRate"
-              type="number"
-              value={newDetail.fortyKgRate}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            />
-            <TextField
-              label="Vehicle No"
-              name="vehicleNo"
-              value={newDetail.vehicleNo}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            />
-            <IconButton
-              onClick={handleAddDetail}
-              size="small"
-              sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' } }}
-            >
+            <IconButton onClick={handleAddDetail} size="small" sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' } }}>
               <PlusOutlined style={{ fontSize: '16px' }} />
             </IconButton>
           </Box>
