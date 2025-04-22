@@ -16,38 +16,37 @@ import {
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
-  // Ensure details is an array
   const safeDetails = Array.isArray(details) ? details : [];
 
   const [newDetail, setNewDetail] = useState({
-    lotNumber: '',
+    lot_number: '',
     date: '',
-    location: '',
-    product: '',
-    unit: '',
-    availableQty: 0,
+    location_id: '',
+    product_id: '',
+    unit_id: '',
+    available_qty: 0,
     qty: 0,
-    qtyLess: 0,
-    availableWeight: 0,
+    qty_less: 0,
+    available_weight: 0,
     weight: 0,
-    weightLess: 0,
+    weight_less: 0,
     type: 'processingOut',
   });
 
   const handleAddDetail = () => {
     onChange([...safeDetails, newDetail]);
     setNewDetail({
-      lotNumber: '',
+      lot_number: '',
       date: '',
-      location: '',
-      product: '',
-      unit: '',
-      availableQty: 0,
+      location_id: '',
+      product_id: '',
+      unit_id: '',
+      available_qty: 0,
       qty: 0,
-      qtyLess: 0,
-      availableWeight: 0,
+      qty_less: 0,
+      available_weight: 0,
       weight: 0,
-      weightLess: 0,
+      weight_less: 0,
       type: 'processingOut',
     });
   };
@@ -61,160 +60,54 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
     const { name, value } = e.target;
     setNewDetail((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name.endsWith('_id') || name === 'lot_number' ? value : parseFloat(value) || 0,
     }));
   };
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Typography
-        variant="h6"
-        sx={{ mb: 1, fontSize: '1rem', fontWeight: 500, color: '#1e293b' }}
-      >
+      <Typography variant="h6" sx={{ mb: 1, fontSize: '1rem', fontWeight: 500, color: '#1e293b' }}>
         Processing Out / Raw Material
       </Typography>
-      <TableContainer
-        component={Paper}
-        sx={{
-          borderRadius: '8px',
-          border: '1px solid #e8ecef',
-          boxShadow: 'none',
-        }}
-      >
+      <TableContainer component={Paper} sx={{ borderRadius: '8px', border: '1px solid #e8ecef', boxShadow: 'none' }}>
         <Table sx={{ minWidth: 650, borderCollapse: 'separate', borderSpacing: 0 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f1f5f9', color: '#1e293b' }}>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Lot #
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Date
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Location
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Product
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Unit
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Available Qty
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Qty
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Qty Less
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Available Weight
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Weight
               </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Weight Less
               </TableCell>
               {!isViewMode && (
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    color: '#1e293b',
-                    padding: '6px 12px',
-                    borderBottom: '1px solid #e8ecef',
-                  }}
-                >
+                <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                   Actions
                 </TableCell>
               )}
@@ -229,158 +122,43 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               </TableRow>
             ) : (
               safeDetails.map((detail, index) => (
-                <TableRow
-                  key={index}
-                  sx={{
-                    backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa',
-                    '&:hover': {
-                      backgroundColor: '#f8fafc',
-                      transition: 'background-color 0.2s ease-in-out',
-                    },
-                    '&:last-child td': {
-                      borderBottom: 'none',
-                    },
-                  }}
-                >
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.lotNumber || '-'}
+                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.lot_number || '-'}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.date || '-'}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.location || '-'}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.location_id || '-'}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.product || '-'}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.product_id || '-'}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.unit || '-'}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.unit_id || '-'}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.availableQty || 0}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.available_qty || 0}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.qty || 0}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.qtyLess || 0}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.qty_less || 0}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.availableWeight || 0}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.available_weight || 0}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.weight || 0}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
-                      borderBottom: '1px solid #e8ecef',
-                      borderRight: '1px solid #e8ecef',
-                      color: '#334155',
-                    }}
-                  >
-                    {detail.weightLess || 0}
+                  <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
+                    {detail.weight_less || 0}
                   </TableCell>
                   {!isViewMode && (
-                    <TableCell
-                      sx={{
-                        fontSize: '0.75rem',
-                        padding: '6px 12px',
-                        borderBottom: '1px solid #e8ecef',
-                      }}
-                    >
-                      <IconButton
-                        onClick={() => handleDeleteDetail(index)}
-                        size="small"
-                        sx={{
-                          color: '#ef4444',
-                          '&:hover': {
-                            backgroundColor: '#fee2e2',
-                          },
-                        }}
-                      >
+                    <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
+                      <IconButton onClick={() => handleDeleteDetail(index)} size="small" sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' }}}>
                         <DeleteOutlined style={{ fontSize: '16px' }} />
                       </IconButton>
                     </TableCell>
@@ -396,11 +174,11 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <TextField
               label="Lot #"
-              name="lotNumber"
-              value={newDetail.lotNumber}
+              name="lot_number"
+              value={newDetail.lot_number}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 100, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 100 }}
             />
             <TextField
               label="Date"
@@ -410,52 +188,52 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               onChange={handleNewDetailChange}
               size="small"
               InputLabelProps={{ shrink: true }}
-              sx={{ width: 140, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 140 }}
             />
             <TextField
               label="Location"
-              name="location"
-              value={newDetail.location}
+              name="location_id"
+              value={newDetail.location_id}
               onChange={handleNewDetailChange}
               select
               size="small"
-              sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 120 }}
             >
-              <MenuItem value="">Please select</MenuItem>
-              <MenuItem value="SA GODOWN">SA GODOWN</MenuItem>
+              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="1">SA GODOWN</MenuItem>
             </TextField>
             <TextField
               label="Product"
-              name="product"
-              value={newDetail.product}
+              name="product_id"
+              value={newDetail.product_id}
               onChange={handleNewDetailChange}
               select
               size="small"
-              sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 120 }}
             >
-              <MenuItem value="">Please select</MenuItem>
-              <MenuItem value="1121 Sella Raw">1121 Sella Raw</MenuItem>
+              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="1">1121 Sella Raw</MenuItem>
             </TextField>
             <TextField
               label="Unit"
-              name="unit"
-              value={newDetail.unit}
+              name="unit_id"
+              value={newDetail.unit_id}
               onChange={handleNewDetailChange}
               select
               size="small"
-              sx={{ width: 100, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 100 }}
             >
-              <MenuItem value="Kg">Kg</MenuItem>
-              <MenuItem value="Ton">Ton</MenuItem>
+              <MenuItem value="1">Kg</MenuItem>
+              <MenuItem value="2">Ton</MenuItem>
             </TextField>
             <TextField
               label="Available Qty"
-              name="availableQty"
+              name="available_qty"
               type="number"
-              value={newDetail.availableQty}
+              value={newDetail.available_qty}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 100, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 100 }}
             />
             <TextField
               label="Qty"
@@ -464,25 +242,25 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               value={newDetail.qty}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 80 }}
             />
             <TextField
               label="Qty Less"
-              name="qtyLess"
+              name="qty_less"
               type="number"
-              value={newDetail.qtyLess}
+              value={newDetail.qty_less}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 80 }}
             />
             <TextField
               label="Available Weight"
-              name="availableWeight"
+              name="available_weight"
               type="number"
-              value={newDetail.availableWeight}
+              value={newDetail.available_weight}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 100, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 100 }}
             />
             <TextField
               label="Weight"
@@ -491,27 +269,18 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               value={newDetail.weight}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 80 }}
             />
             <TextField
               label="Weight Less"
-              name="weightLess"
+              name="weight_less"
               type="number"
-              value={newDetail.weightLess}
+              value={newDetail.weight_less}
               onChange={handleNewDetailChange}
               size="small"
-              sx={{ width: 80, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ width: 80 }}
             />
-            <IconButton
-              onClick={handleAddDetail}
-              size="small"
-              sx={{
-                color: '#1976d2',
-                '&:hover': {
-                  backgroundColor: '#e0f2fe',
-                },
-              }}
-            >
+            <IconButton onClick={handleAddDetail} size="small" sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' }}}>
               <PlusOutlined style={{ fontSize: '16px' }} />
             </IconButton>
           </Box>

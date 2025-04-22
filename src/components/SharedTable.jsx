@@ -103,15 +103,22 @@ const SharedTable = ({
   }, [safeData, search, columns]);
 
   const sortedData = useMemo(() => {
+    if (!orderBy) return filteredData;
+    
+    const columnDefinition = columns.find(col => col.id === orderBy);
+    if (!columnDefinition) return filteredData;
+  
     const comparator = (a, b) => {
-      const aValue = column.render ? column.render(a) : a[orderBy];
-      const bValue = column.render ? column.render(b) : b[orderBy];
+      const aValue = columnDefinition.render ? columnDefinition.render(a) : a[orderBy];
+      const bValue = columnDefinition.render ? columnDefinition.render(b) : b[orderBy];
+      
       if (aValue < bValue) return order === 'asc' ? -1 : 1;
       if (aValue > bValue) return order === 'asc' ? 1 : -1;
       return 0;
     };
+    
     return [...filteredData].sort(comparator);
-  }, [filteredData, order, orderBy]);
+  }, [filteredData, order, orderBy, columns]);
 
   const paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 

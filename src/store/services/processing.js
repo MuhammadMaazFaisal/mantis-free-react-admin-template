@@ -3,21 +3,21 @@ import { commonBaseQuery } from './baseApi';
 
 export const processingApi = createApi({
   reducerPath: 'processingApi',
-  baseQuery: commonBaseQuery('processings'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['Processing'],
   endpoints: (builder) => ({
     getProcessings: builder.query({
-      query: () => '/',
+      query: () => 'processings',
       transformResponse: (response) => response.success ? response.data : [],
       providesTags: ['Processing'],
     }),
     getProcessingById: builder.query({
-      query: (id) => `/${id}`,
+      query: (id) => `processings/${id}`,
       transformResponse: (response) => response.success ? response.data : {},
     }),
     addProcessing: builder.mutation({
       query: (processing) => ({
-        url: '/',
+        url: 'processings/',
         method: 'POST',
         body: processing,
       }),
@@ -26,7 +26,7 @@ export const processingApi = createApi({
     }),
     updateProcessing: builder.mutation({
       query: (processing) => ({
-        url: `/${processing.id}`,
+        url: `processings/${processing.id}`,
         method: 'PUT',
         body: processing,
       }),
@@ -35,7 +35,7 @@ export const processingApi = createApi({
     }),
     deleteProcessing: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        url: `processings/${id}`,
         method: 'DELETE',
       }),
       transformResponse: (response) => response.success ? response.data : {},
