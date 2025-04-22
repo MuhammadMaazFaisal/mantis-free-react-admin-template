@@ -54,8 +54,17 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
     setNewDetail((prev) => ({
       ...prev,
       [name]: value,
-      amount: name === 'qty' || name === 'rate' ? (name === 'qty' ? value * prev.rate : prev.qty * value) : prev.amount,
+      amount: name === 'qty' || name === 'rate' ? 
+        (name === 'qty' ? value * prev.rate : prev.qty * value) : 
+        prev.amount,
     }));
+  };
+
+  // Helper function to safely get product name
+  const getProductName = (product) => {
+    if (!product) return '';
+    if (typeof product === 'string') return product;
+    return product.name || '';
   };
 
   return (
@@ -69,132 +78,39 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
     >
       <Table sx={{ minWidth: 650, borderCollapse: 'separate', borderSpacing: 0 }}>
         <TableHead>
-          <TableRow
-            sx={{
-              backgroundColor: '#f1f5f9', // Match SharedTable header color
-              color: '#1e293b',
-            }}
-          >
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+          <TableRow sx={{ backgroundColor: '#f1f5f9', color: '#1e293b' }}>
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Location
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Product
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Unit
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Qty
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Rate
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Amount
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Weight
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Inv Rate
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               40kg Rate
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: '#1e293b',
-                padding: '6px 12px',
-                borderBottom: '1px solid #e8ecef',
-              }}
-            >
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Vehicle No
             </TableCell>
             {!isViewMode && (
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  color: '#1e293b',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                }}
-              >
+              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                 Actions
               </TableCell>
             )}
@@ -206,142 +122,46 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
               key={index}
               sx={{
                 backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa',
-                '&:hover': {
-                  backgroundColor: '#f8fafc',
-                  transition: 'background-color 0.2s ease-in-out',
-                },
-                '&:last-child td': {
-                  borderBottom: 'none',
-                },
+                '&:hover': { backgroundColor: '#f8fafc' },
+                '&:last-child td': { borderBottom: 'none' },
               }}
             >
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.location}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
-                {detail.product}
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
+                {getProductName(detail.product)}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.unit}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.qty}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.rate}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.amount}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.weight}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.invRate}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.fortyKgRate}
               </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  borderRight: '1px solid #e8ecef',
-                  color: '#334155',
-                }}
-              >
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.vehicleNo}
               </TableCell>
               {!isViewMode && (
-                <TableCell
-                  sx={{
-                    fontSize: '0.75rem',
-                    padding: '6px 12px',
-                    borderBottom: '1px solid #e8ecef',
-                  }}
-                >
+                <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
                   <IconButton
                     onClick={() => handleDeleteDetail(index)}
                     size="small"
-                    sx={{
-                      color: '#ef4444',
-                      '&:hover': {
-                        backgroundColor: '#fee2e2',
-                      },
-                    }}
+                    sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' } }}
                   >
                     <DeleteOutlined style={{ fontSize: '16px' }} />
                   </IconButton>
@@ -447,12 +267,7 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
             <IconButton
               onClick={handleAddDetail}
               size="small"
-              sx={{
-                color: '#1976d2',
-                '&:hover': {
-                  backgroundColor: '#e0f2fe',
-                },
-              }}
+              sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' } }}
             >
               <PlusOutlined style={{ fontSize: '16px' }} />
             </IconButton>

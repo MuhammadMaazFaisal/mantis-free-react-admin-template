@@ -3,22 +3,22 @@ import { commonBaseQuery } from './baseApi';
 
 export const productApi = createApi({
   reducerPath: 'productApi',
-  baseQuery: commonBaseQuery('products'),
+  baseQuery: commonBaseQuery(''),
   tagTypes: ['Product'],
   endpoints: (builder) => ({
     getProducts: builder.query({
-      query: () => '/',
+      query: () => 'products',
       transformResponse: (response) => response.success ? response.data : [],
       providesTags: ['Product'],
     }),
     getProductById: builder.query({
-      query: (id) => `/${id}`,
+      query: (id) => `products/${id}`,
       transformResponse: (response) => response.success ? response.data : {},
       providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
     addProduct: builder.mutation({
       query: (product) => ({
-        url: '/',
+        url: 'products/',
         method: 'POST',
         body: product,
       }),
@@ -27,7 +27,7 @@ export const productApi = createApi({
     }),
     updateProduct: builder.mutation({
       query: ({ id, ...product }) => ({
-        url: `/${id}`,
+        url: `products/${id}`,
         method: 'PUT',
         body: product,
       }),
@@ -36,7 +36,7 @@ export const productApi = createApi({
     }),
     deleteProduct: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        url: `products/${id}`,
         method: 'DELETE',
       }),
       transformResponse: (response) => response.success ? response.data : {},

@@ -15,7 +15,7 @@ const Receivings = () => {
   const [updateReceiving] = useUpdateReceivingMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', or 'view'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedReceiving, setSelectedReceiving] = useState(null);
   const [formData, setFormData] = useState({
     lotNumber: '',
@@ -71,17 +71,42 @@ const Receivings = () => {
     { name: 'active', label: 'Is Active', type: 'checkbox' },
   ];
 
+  const formatReceivingData = (receiving) => {
+    return {
+      ...receiving,
+      party: receiving.party?.name || '',
+      arrivalDate: receiving.arrival_date || receiving.arrivalDate,
+      active: receiving.active === 1 || receiving.active === true
+    };
+  };
+
   const columns = [
     { id: 'id', label: 'ID' },
-    { id: 'arrivalDate', label: 'Arrival Date' },
+    { 
+      id: 'arrivalDate', 
+      label: 'Arrival Date',
+      format: (value) => new Date(value).toLocaleDateString()
+    },
     { id: 'party', label: 'Party' },
     { id: 'receivingType', label: 'Receiving Type' },
     { id: 'lotNumber', label: 'Lot #' },
     { id: 'fileNumber', label: 'File #' },
     { id: 'remarks', label: 'Remarks' },
-    { id: 'total', label: 'Total (₹)' },
-    { id: 'discountPercent', label: 'Discount (%)' },
-    { id: 'grandTotal', label: 'Grand Total (₹)' },
+    { 
+      id: 'total', 
+      label: 'Total (₹)',
+      format: (value) => parseFloat(value).toFixed(2)
+    },
+    { 
+      id: 'discountPercent', 
+      label: 'Discount (%)',
+      format: (value) => parseFloat(value).toFixed(2)
+    },
+    { 
+      id: 'grandTotal', 
+      label: 'Grand Total (₹)',
+      format: (value) => parseFloat(value).toFixed(2)
+    },
     {
       id: 'active',
       label: 'Is Active',
@@ -123,7 +148,7 @@ const Receivings = () => {
     setModalMode(mode);
     setSelectedReceiving(receiving);
     if (receiving) {
-      setFormData(receiving);
+      setFormData(formatReceivingData(receiving));
     } else {
       setFormData({
         lotNumber: '',
@@ -170,16 +195,25 @@ const Receivings = () => {
     } else if (Array.isArray(e)) {
       setFormData((prev) => ({ ...prev, details: e }));
     } else {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      const { name, value, type, checked } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
     }
   };
 
   const handleSubmit = () => {
+    const formattedData = {
+      ...formData,
+      active: formData.active ? 1 : 0,
+      party_id: typeof formData.party === 'object' ? formData.party.id : null
+    };
+
     if (modalMode === 'add') {
-      addReceiving(formData);
+      addReceiving(formattedData);
     } else if (modalMode === 'edit') {
-      updateReceiving({ ...formData, id: selectedReceiving.id });
+      updateReceiving({ ...formattedData, id: selectedReceiving.id });
     }
     handleCloseModal();
   };
@@ -199,7 +233,7 @@ const Receivings = () => {
       {modalMode === 'view' && selectedReceiving ? (
         <>
           <ViewDetails
-            data={selectedReceiving}
+            data={formatReceivingData(selectedReceiving)}
             title={`Receiving Details - ID ${selectedReceiving.id}`}
             detailsRef={detailsRef}
             fields={viewFields}
@@ -225,22 +259,20 @@ const Receivings = () => {
           </Box>
           <SharedTable
             columns={columns}
-            data={receivings}
+            data={receivings?.map(formatReceivingData) || []}
             onEdit={(receiving) => {
-              // Reset expanded rows before navigating to edit mode
-              tableRef.current = null; // Clear table ref to prevent stale renders
+              tableRef.current = null;
               handleOpenModal('edit', receiving);
             }}
             onView={(receiving) => {
-              // Reset expanded rows before navigating to view mode
-              tableRef.current = null; // Clear table ref to prevent stale renders
+              tableRef.current = null;
               handleOpenModal('view', receiving);
             }}
             page={page}
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={receivings.length}
+            totalRows={receivings?.length || 0}
             tableRef={tableRef}
             subTableConfig={subTableConfig}
           />
