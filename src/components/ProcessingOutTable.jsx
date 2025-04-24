@@ -14,9 +14,13 @@ import {
   Typography,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+// Import dynamic data hooks
+import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
 
 const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
+  const { data: locations } = useLocationsQuery();
+  const { data: units } = useUnitsQuery();
 
   const [newDetail, setNewDetail] = useState({
     lot_number: '',
@@ -60,7 +64,9 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
     const { name, value } = e.target;
     setNewDetail((prev) => ({
       ...prev,
-      [name]: name.endsWith('_id') || name === 'lot_number' ? value : parseFloat(value) || 0,
+      [name]: name === "date" || name.endsWith('_id') || name === 'lot_number'
+        ? value
+        : parseFloat(value) || 0,
     }));
   };
 
@@ -122,7 +128,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               </TableRow>
             ) : (
               safeDetails.map((detail, index) => (
-                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
+                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' } }}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.lot_number || '-'}
                   </TableCell>
@@ -130,13 +136,19 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
                     {detail.date || '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.location_id || '-'}
+                    {(() => {
+                      const loc = locations && locations.find(l => l.id === detail.location_id);
+                      return loc ? loc.name : '-';
+                    })()}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.product_id || '-'}
+                    {detail.product_id ? `Product ${detail.product_id}` : '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.unit_id || '-'}
+                    {(() => {
+                      const unit = units && units.find(u => u.id === detail.unit_id);
+                      return unit ? unit.name : '-';
+                    })()}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.available_qty || 0}
@@ -158,7 +170,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
                   </TableCell>
                   {!isViewMode && (
                     <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
-                      <IconButton onClick={() => handleDeleteDetail(index)} size="small" sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' }}}>
+                      <IconButton onClick={() => handleDeleteDetail(index)} size="small" sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fee2e2' } }}>
                         <DeleteOutlined style={{ fontSize: '16px' }} />
                       </IconButton>
                     </TableCell>
@@ -200,7 +212,9 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
-              <MenuItem value="1">SA GODOWN</MenuItem>
+              {locations && locations.map(loc => (
+                <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Product"
@@ -212,6 +226,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
+              {/* Replace with dynamic product options when available */}
               <MenuItem value="1">1121 Sella Raw</MenuItem>
             </TextField>
             <TextField
@@ -223,64 +238,18 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               size="small"
               sx={{ width: 100 }}
             >
-              <MenuItem value="1">Kg</MenuItem>
-              <MenuItem value="2">Ton</MenuItem>
+              <MenuItem value="">Select</MenuItem>
+              {units && units.map(u => (
+                <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+              ))}
             </TextField>
-            <TextField
-              label="Available Qty"
-              name="available_qty"
-              type="number"
-              value={newDetail.available_qty}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 100 }}
-            />
-            <TextField
-              label="Qty"
-              name="qty"
-              type="number"
-              value={newDetail.qty}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Qty Less"
-              name="qty_less"
-              type="number"
-              value={newDetail.qty_less}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Available Weight"
-              name="available_weight"
-              type="number"
-              value={newDetail.available_weight}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 100 }}
-            />
-            <TextField
-              label="Weight"
-              name="weight"
-              type="number"
-              value={newDetail.weight}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Weight Less"
-              name="weight_less"
-              type="number"
-              value={newDetail.weight_less}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <IconButton onClick={handleAddDetail} size="small" sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' }}}>
+            <TextField label="Available Qty" name="available_qty" type="number" value={newDetail.available_qty} onChange={handleNewDetailChange} size="small" sx={{ width: 100 }} />
+            <TextField label="Qty" name="qty" type="number" value={newDetail.qty} onChange={handleNewDetailChange} size="small" sx={{ width: 80 }} />
+            <TextField label="Qty Less" name="qty_less" type="number" value={newDetail.qty_less} onChange={handleNewDetailChange} size="small" sx={{ width: 80 }} />
+            <TextField label="Available Weight" name="available_weight" type="number" value={newDetail.available_weight} onChange={handleNewDetailChange} size="small" sx={{ width: 100 }} />
+            <TextField label="Weight" name="weight" type="number" value={newDetail.weight} onChange={handleNewDetailChange} size="small" sx={{ width: 80 }} />
+            <TextField label="Weight Less" name="weight_less" type="number" value={newDetail.weight_less} onChange={handleNewDetailChange} size="small" sx={{ width: 80 }} />
+            <IconButton onClick={handleAddDetail} size="small" sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' } }}>
               <PlusOutlined style={{ fontSize: '16px' }} />
             </IconButton>
           </Box>

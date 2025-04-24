@@ -14,9 +14,12 @@ import {
   Typography,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
 
 const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
+  const { data: locations } = useLocationsQuery();
+  const { data: units } = useUnitsQuery();
 
   const [newDetail, setNewDetail] = useState({
     lot_number: '',
@@ -60,10 +63,12 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
     const { name, value } = e.target;
     setNewDetail((prev) => ({
       ...prev,
-      [name]: name.endsWith('_id') || name === 'lot_number' || name === 'product_type' ? value : parseFloat(value) || 0,
-      amount: name === 'qty' || name === 'rate' ? 
-        (name === 'qty' ? value * prev.rate : prev.qty * value) : 
-        prev.amount,
+      [name]: name === "date" || name.endsWith('_id') || name === 'lot_number' || name === 'product_type'
+        ? value
+        : parseFloat(value) || 0,
+      amount: name === 'qty' || name === 'rate'
+        ? (name === 'qty' ? value * prev.rate : prev.qty * value)
+        : prev.amount,
     }));
   };
 
@@ -133,13 +138,19 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
                     {detail.date || '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.location_id || '-'}
+                    {(() => {
+                      const loc = locations && locations.find(l => l.id === detail.location_id);
+                      return loc ? loc.name : '-';
+                    })()}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.product_id || '-'}
+                    {detail.product_id ? `Product ${detail.product_id}` : '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.unit_id || '-'}
+                    {(() => {
+                      const unit = units && units.find(u => u.id === detail.unit_id);
+                      return unit ? unit.name : '-';
+                    })()}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.qty || 0}
@@ -203,7 +214,9 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
-              <MenuItem value="1">SA GODOWN</MenuItem>
+              {locations && locations.map(loc => (
+                <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Product"
@@ -227,8 +240,10 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               size="small"
               sx={{ width: 100 }}
             >
-              <MenuItem value="1">Kg</MenuItem>
-              <MenuItem value="2">Ton</MenuItem>
+              <MenuItem value="">Select</MenuItem>
+              {units && units.map(u => (
+                <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Qty"

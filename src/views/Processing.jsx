@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { useGetProcessingsQuery, useAddProcessingMutation, useUpdateProcessingMutation } from '../store/services/processing';
+import { useGetPartiesQuery } from '../store/services/party';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
@@ -13,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 const Processing = () => {
   const navigate = useNavigate();
   const { data: apiResponse, isLoading, isError, error, refetch } = useGetProcessingsQuery();
+  const { data: partyData } = useGetPartiesQuery();
   const [addProcessing] = useAddProcessingMutation();
   const [updateProcessing] = useUpdateProcessingMutation();
 
@@ -43,81 +45,31 @@ const Processing = () => {
     return data.map(item => ({
       id: item.id,
       date: item.date,
-      party: item.party?.name || '',
       party_id: item.party_id,
       description: item.description,
-      chargesTotal: parseFloat(item.charges_total),
-      active: item.active === 1,
-      processingStatus: item.processing_status,
-      processingOut: item.processing_outs?.map(out => ({
-        id: out.id,
-        lotNumber: out.lot_number,
-        date: out.date,
-        location: out.location_id, // You might want to fetch location name
-        location_id: out.location_id,
-        product: out.product_id, // You might want to fetch product name
-        product_id: out.product_id,
-        unit: out.unit_id, // You might want to fetch unit name
-        unit_id: out.unit_id,
-        availableQty: parseFloat(out.available_qty),
-        qty: parseFloat(out.qty),
-        qtyLess: parseFloat(out.qty_less),
-        availableWeight: parseFloat(out.available_weight),
-        weight: parseFloat(out.weight),
-        weightLess: parseFloat(out.weight_less),
-        type: 'processingOut',
-      })) || [],
-      processingIn: item.processing_ins?.map(inItem => ({
-        id: inItem.id,
-        lotNumber: inItem.lot_number,
-        date: inItem.date,
-        location: inItem.location_id,
-        location_id: inItem.location_id,
-        product: inItem.product_id,
-        product_id: inItem.product_id,
-        unit: inItem.unit_id,
-        unit_id: inItem.unit_id,
-        qty: parseFloat(inItem.qty),
-        rate: parseFloat(inItem.rate),
-        amount: parseFloat(inItem.amount),
-        weight: parseFloat(inItem.weight),
-        productType: inItem.product_type,
-        weightLess: parseFloat(inItem.weight_less),
-        type: 'processingIn',
-      })) || [],
-      processingExpenses: item.processing_expenses?.map(expense => ({
-        id: expense.id,
-        chargesType: expense.charges_type_id, // You might want to fetch charges type name
-        charges_type_id: expense.charges_type_id,
-        details: expense.details,
-        qty: parseFloat(expense.qty),
-        weight: parseFloat(expense.weight),
-        rate: parseFloat(expense.rate),
-        amount: parseFloat(expense.amount),
-        type: 'processingExpenses',
-      })) || [],
-      addedBy: item.added_by?.toString() || 'Unknown',
-      addedOn: item.added_on || item.created_at,
-      modifiedBy: item.modified_by?.toString() || '',
-      modifiedOn: item.modified_on || item.updated_at,
+      charges_total: item.charges_total,
+      active: item.active,
+      processing_outs: item.processing_outs || [],
+      processing_ins: item.processing_ins || [],
+      processing_expenses: item.processing_expenses || [],
     }));
   };
 
   const processings = transformProcessingData(apiResponse);
 
+  // Build dynamic options for Party field
+  const partyOptions = [
+    { value: '', label: 'Please select' },
+    ...((partyData && Array.isArray(partyData)) ? partyData.map(p => ({ value: p.id, label: p.name })) : [])
+  ];
+
   const fields = [
-    { name: 'date', label: 'Date', type: 'date', required: true, sm: 6 },
+    { name: 'date', label: 'Date', type: 'date', required: true, sm: 6, InputLabelProps: { shrink: true } },
     {
       name: 'party_id',
       label: 'Party',
       type: 'select',
-      options: [
-        { value: '', label: 'Please select' },
-        // These should ideally come from a parties API
-        { value: '1', label: 'Test Party' },
-        { value: '2', label: 'SA Rice' },
-        { value: '3', label: 'All Commodities' },
-      ],
+      options: partyOptions,
       required: true,
       sm: 6,
     },
@@ -129,15 +81,21 @@ const Processing = () => {
   const columns = [
     { id: 'id', label: 'ID' },
     { id: 'date', label: 'Date' },
-    { id: 'party', label: 'Party' },
+    {
+      id: 'party_id',
+      label: 'Party',
+      format: (value) => {
+        const party = partyOptions.find((opt) => opt.value == value);
+        return party ? party.label : value;
+      }
+    },
     { id: 'description', label: 'Description' },
-    { id: 'chargesTotal', label: 'Charges Total (₹)' },
+    { id: 'charges_total', label: 'Charges Total (₹)' },
     {
       id: 'active',
       label: 'Active',
       format: (value) => (value ? 'Yes' : 'No'),
     },
-    { id: 'processingStatus', label: 'Processing Status' },
   ];
 
   const viewFields = [
@@ -235,8 +193,17 @@ const Processing = () => {
   };
 
   const handleSubmit = async () => {
+    // Added validation for required nested fields
+    if (
+      !formData.processing_outs.length ||
+      !formData.processing_ins.length ||
+      !formData.processing_expenses.length
+    ) {
+      alert("Please add at least one entry for Processing Outs, Processing Ins, and Processing Expenses.");
+      return;
+    }
     try {
-      // Transform data for API
+      // Transform data for API with updated key mapping
       const apiData = {
         date: formData.date,
         party_id: formData.party_id,
@@ -244,20 +211,20 @@ const Processing = () => {
         charges_total: formData.charges_total,
         active: formData.active,
         processing_outs: formData.processing_outs.map(item => ({
-          lot_number: item.lotNumber,
+          lot_number: item.lot_number,            // changed from item.lotNumber
           date: item.date,
           location_id: item.location_id,
           product_id: item.product_id,
           unit_id: item.unit_id,
-          available_qty: item.availableQty,
+          available_qty: item.available_qty,        // changed from item.availableQty
           qty: item.qty,
-          qty_less: item.qtyLess,
-          available_weight: item.availableWeight,
+          qty_less: item.qty_less,                  // changed from item.qtyLess
+          available_weight: item.available_weight,  // changed from item.availableWeight
           weight: item.weight,
-          weight_less: item.weightLess,
+          weight_less: item.weight_less,            // changed from item.weightLess
         })),
         processing_ins: formData.processing_ins.map(item => ({
-          lot_number: item.lotNumber,
+          lot_number: item.lot_number,            // changed from item.lotNumber
           date: item.date,
           location_id: item.location_id,
           product_id: item.product_id,
@@ -266,8 +233,8 @@ const Processing = () => {
           rate: item.rate,
           amount: item.amount,
           weight: item.weight,
-          product_type: item.productType,
-          weight_less: item.weightLess,
+          product_type: item.product_type,        // changed from item.productType
+          weight_less: item.weight_less,          // changed from item.weightLess
         })),
         processing_expenses: formData.processing_expenses.map(item => ({
           charges_type_id: item.charges_type_id,

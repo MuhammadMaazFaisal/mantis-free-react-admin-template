@@ -17,7 +17,7 @@ export const processingApi = createApi({
     }),
     addProcessing: builder.mutation({
       query: (processing) => ({
-        url: 'processings/',
+        url: 'processings',
         method: 'POST',
         body: processing,
       }),
