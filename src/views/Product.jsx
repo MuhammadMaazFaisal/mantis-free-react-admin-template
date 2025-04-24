@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Typography, Button, Box, Alert, Snackbar, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useGetProductsQuery, useAddProductMutation, useUpdateProductMutation, useDeleteProductMutation } from '../store/services/product';
+import { useProductGroupsQuery, useUnitsQuery } from 'store/services/settings';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
@@ -26,12 +27,17 @@ const Product = () => {
     const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
     const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
 
+    const { data: groups } = useProductGroupsQuery();
+    const { data: unitsData } = useUnitsQuery();
+
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', or 'view'
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [formData, setFormData] = useState({
         itemNo: '',
         productName: '',
+        product_group_id: '',
+        unit_id: '',
     });
     
     const [snackbar, setSnackbar] = useState({
@@ -57,6 +63,22 @@ const Product = () => {
     const fields = [
         { name: 'itemNo', label: 'Item No', required: true, sm: 6 },
         { name: 'productName', label: 'Product Name', required: true, sm: 6 },
+        { 
+            name: 'product_group_id', 
+            label: 'Product Group', 
+            required: true, 
+            sm: 6, 
+            type: 'select', 
+            options: groups ? groups.map(group => ({ label: group.name, value: group.id })) : [] 
+        },
+        { 
+            name: 'unit_id', 
+            label: 'Unit', 
+            required: true, 
+            sm: 6, 
+            type: 'select', 
+            options: unitsData ? unitsData.map(unit => ({ label: unit.name, value: unit.id })) : [] 
+        },
     ];
 
     const columns = [
@@ -94,12 +116,16 @@ const Product = () => {
             
             setFormData({
                 itemNo,
-                productName
+                productName,
+                product_group_id: product.product_group_id || '',
+                unit_id: product.unit_id || '',
             });
         } else {
             setFormData({
                 itemNo: '',
                 productName: '',
+                product_group_id: '',
+                unit_id: '',
             });
         }
 
@@ -121,6 +147,8 @@ const Product = () => {
             setFormData({
                 itemNo: '',
                 productName: '',
+                product_group_id: '',
+                unit_id: '',
             });
         } else {
             const { name, value } = e.target;
@@ -130,18 +158,23 @@ const Product = () => {
 
     const handleSubmit = async () => {
         try {
-            // Concatenate itemNo and productName to create the name field for API
-            const name = `${formData.itemNo} - ${formData.productName}`;
+            // Construct payload per API requirements
+            const payload = {
+                item_no: formData.itemNo,
+                name: formData.productName,
+                product_group_id: formData.product_group_id,
+                unit_id: formData.unit_id,
+            };
             
             if (modalMode === 'add') {
-                await addProduct({ name }).unwrap();
+                await addProduct(payload).unwrap();
                 setSnackbar({
                     open: true,
                     message: 'Product added successfully',
                     severity: 'success',
                 });
             } else if (modalMode === 'edit') {
-                await updateProduct({ id: selectedProduct.id, name }).unwrap();
+                await updateProduct({ id: selectedProduct.id, ...payload }).unwrap();
                 setSnackbar({
                     open: true,
                     message: 'Product updated successfully',
