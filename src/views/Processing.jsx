@@ -39,19 +39,26 @@ const Processing = () => {
   const detailsRef = useRef();
 
   // Transform API data to match the expected format
-  const transformProcessingData = (data) => {
-    if (!data) return [];
-    
-    return data.map(item => ({
+  const transformProcessingData = (apiResponse) => {
+    if (!apiResponse) return [];
+    // Use apiResponse.data if present, otherwise use apiResponse directly.
+    const dataArr = apiResponse.data ? apiResponse.data : apiResponse;
+    console.log('Transformed Processing Data:', dataArr); // Debugging line
+    return dataArr.map(item => ({
       id: item.id,
       date: item.date,
       party_id: item.party_id,
       description: item.description,
       charges_total: item.charges_total,
-      active: item.active,
+      active: item.active == 1, // convert numeric flag to boolean
       processing_outs: item.processing_outs || [],
       processing_ins: item.processing_ins || [],
       processing_expenses: item.processing_expenses || [],
+      addedBy: item.added_by,
+      addedOn: item.added_on,
+      modifiedBy: item.modified_by,
+      modifiedOn: item.modified_on,
+      processingStatus: item.processing_status,
     }));
   };
 
@@ -112,17 +119,17 @@ const Processing = () => {
       {
         label: 'Processing Out / Raw Material',
         type: 'processingOut',
-        dataKey: 'processingOut',
+        dataKey: 'processing_outs',
       },
       {
         label: 'Processing In / Finished Products',
         type: 'processingIn',
-        dataKey: 'processingIn',
+        dataKey: 'processing_ins',
       },
       {
         label: 'Processing Expenses',
         type: 'processingExpenses',
-        dataKey: 'processingExpenses',
+        dataKey: 'processing_expenses',
       },
     ],
   };

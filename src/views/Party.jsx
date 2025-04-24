@@ -117,16 +117,16 @@ const Party = () => {
         active: true,
       });
     }
-    setModalOpen(true);
+    // Only open the modal for add or edit modes like in Product.jsx
+    if (mode !== 'view') {
+      setModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedParty(null);
     if (modalMode === 'view') {
-      navigate('/party');
-    }
-  };
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;

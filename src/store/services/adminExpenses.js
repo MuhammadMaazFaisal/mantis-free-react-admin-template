@@ -25,10 +25,10 @@ export const adminExpensesApi = createApi({
       invalidatesTags: ['AdministrativeExpense'],
     }),
     updateAdministrativeExpense: builder.mutation({
-      query: (updatedExpense) => ({
-        url: `administrative-expenses/${updatedExpense.id}`,
+      query: ({ id, ...data }) => ({
+        url: `administrative-expenses/${id}`,
         method: 'PUT',
-        body: updatedExpense,
+        body: data,
       }),
       transformResponse: (response) => response.success ? response.data : {},
       invalidatesTags: ['AdministrativeExpense'],

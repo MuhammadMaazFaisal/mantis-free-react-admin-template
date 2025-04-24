@@ -89,6 +89,7 @@ const AdministrativeExpenses = () => {
     setSelectedExpense(expense);
     if (expense) {
       setFormData({
+        id: expense.id, // added to send id in update URL
         date: expense.date,
         from_account_id: expense.from_account ? expense.from_account.id.toString() : "",
         expense_account_id: expense.expense_account ? expense.expense_account.id.toString() : "",
