@@ -3,6 +3,8 @@ import { Typography, Box, TextField, Button, MenuItem, Grid } from '@mui/materia
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { useGetPartyLedgerQuery } from '../../store/services/reportService';
+import SharedTable from '../../components/SharedTable';
 
 // Mock data for dropdowns
 const accounts = [
@@ -30,6 +32,8 @@ const PartyLedger = () => {
     lotNumber: '',
     fileNumber: '',
   });
+  const [queryParams, setQueryParams] = useState(null);
+  const { data, error, isLoading } = useGetPartyLedgerQuery(queryParams || {}, { skip: !queryParams });
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -41,8 +45,11 @@ const PartyLedger = () => {
   };
 
   const handleSearch = () => {
-    console.log('Searching with:', formData);
-    // Add logic to fetch and display data based on filters
+    setQueryParams({
+      fromDate: formData.fromDate,
+      toDate: formData.toDate,
+      accountId: formData.account,
+    });
   };
 
   return (
@@ -118,6 +125,22 @@ const PartyLedger = () => {
           </Grid>
         </Box>
       </LocalizationProvider>
+      {isLoading && <div>Loading...</div>}
+      {error && <div>Error loading party ledger</div>}
+      {data && 
+        <SharedTable
+          columns={[
+            { id: "date", label: "DATE" },
+            { id: "description", label: "DESCRIPTION" },
+            { id: "reference", label: "REFERENCE" },
+            { id: "debit", label: "DEBIT" },
+            { id: "credit", label: "CREDIT" },
+            { id: "balance", label: "BALANCE" }
+          ]}
+          data={data?.data || []}
+          showActions={false}
+        />
+      }
     </Box>
   );
 };

@@ -33,6 +33,7 @@ const SharedTable = ({
   totalRows,
   tableRef,
   subTableConfig,
+  showActions = true, // new prop added
 }) => {
   const [search, setSearch] = useState('');
   const [order, setOrder] = useState('asc');
@@ -251,18 +252,20 @@ const SharedTable = ({
                   </TableSortLabel>
                 </TableCell>
               ))}
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.8rem',
-                  color: '#1e293b',
-                  padding: '8px 12px',
-                  borderBottom: '1px solid #e8ecef',
-                  backgroundColor: '#f1f5f9',
-                }}
-              >
-                Actions
-              </TableCell>
+              {showActions && (
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    color: '#1e293b',
+                    padding: '8px 12px',
+                    borderBottom: '1px solid #e8ecef',
+                    backgroundColor: '#f1f5f9',
+                  }}
+                >
+                  Actions
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -333,54 +336,56 @@ const SharedTable = ({
                         {column.render ? column.render(row) : row[column.id]}
                       </TableCell>
                     ))}
-                    <TableCell
-                      sx={{
-                        fontSize: '0.75rem',
-                        padding: '6px 12px',
-                        borderBottom: '1px solid #e8ecef',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEdit(row);
-                            }}
-                            size="small"
-                            sx={{
-                              color: '#1976d2',
-                              '&:hover': {
-                                backgroundColor: '#e0f2fe',
-                              },
-                            }}
-                          >
-                            <EditOutlined style={{ fontSize: '16px' }} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View">
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onView(row);
-                            }}
-                            size="small"
-                            sx={{
-                              color: '#1976d2',
-                              '&:hover': {
-                                backgroundColor: '#e0f2fe',
-                              },
-                            }}
-                          >
-                            <EyeOutlined style={{ fontSize: '16px' }} />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
+                    {showActions && (
+                      <TableCell
+                        sx={{
+                          fontSize: '0.75rem',
+                          padding: '6px 12px',
+                          borderBottom: '1px solid #e8ecef',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(row);
+                              }}
+                              size="small"
+                              sx={{
+                                color: '#1976d2',
+                                '&:hover': {
+                                  backgroundColor: '#e0f2fe',
+                                },
+                              }}
+                            >
+                              <EditOutlined style={{ fontSize: '16px' }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="View">
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onView(row);
+                              }}
+                              size="small"
+                              sx={{
+                                color: '#1976d2',
+                                '&:hover': {
+                                  backgroundColor: '#e0f2fe',
+                                },
+                              }}
+                            >
+                              <EyeOutlined style={{ fontSize: '16px' }} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    )}
                   </TableRow>
                   {hasSubTable && (
                     <TableRow>
-                      <TableCell colSpan={columns.length + 2} sx={{ padding: 0, border: 'none' }}>
+                      <TableCell colSpan={columns.length + (showActions ? 2 : 1)} sx={{ padding: 0, border: 'none' }}>
                         <Collapse
                           in={expandedRows[row.id]?.expanded}
                           timeout="auto"

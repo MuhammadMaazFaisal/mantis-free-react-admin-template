@@ -12,6 +12,7 @@ import { settingsApi } from './services/settings';
 import { reportsApi } from './services/reports';
 import { userApi } from './services/user';
 import { dashboardApi } from './services/dashboard';
+import { reportService } from './services/reportService';
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +28,7 @@ export const store = configureStore({
     [reportsApi.reducerPath]: reportsApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
+    [reportService.reducerPath]: reportService.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat([
@@ -41,6 +43,7 @@ export const store = configureStore({
       reportsApi.middleware,
       userApi.middleware,
       dashboardApi.middleware,
+      reportService.middleware,
     ]),
 });
 setupListeners(store.dispatch);
