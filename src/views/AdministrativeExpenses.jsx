@@ -10,19 +10,19 @@ import {
   useAddAdministrativeExpenseMutation, 
   useUpdateAdministrativeExpenseMutation 
 } from '../store/services/adminExpenses';
+import { useChartsOfAccountsQuery } from '../store/services/settings';
 
 const AdministrativeExpenses = () => {
   const navigate = useNavigate();
+  const { data: accounts } = useChartsOfAccountsQuery();
 
-  // Use API for administrative expenses
   const { data: administrativeExpenses, isLoading, isError, error } = useGetAdministrativeExpensesQuery();
   
-  // Mutation hooks for adding/updating expense
   const [addExpense] = useAddAdministrativeExpenseMutation();
   const [updateExpense] = useUpdateAdministrativeExpenseMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', or 'view'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [formData, setFormData] = useState({
     date: '',
@@ -39,18 +39,17 @@ const AdministrativeExpenses = () => {
   const tableRef = useRef();
   const detailsRef = useRef();
 
-  // Update form field keys for API
+  const accountOptions = accounts 
+    ? accounts.map(acc => ({ value: acc.id.toString(), label: acc.account_name }))
+    : [{ value: '', label: 'Please select' }];
+
   const fields = [
     { name: 'date', label: 'Date', type: 'date', required: true, sm: 6 },
     {
       name: 'from_account_id',
       label: 'From Account',
       type: 'select',
-      options: [
-        { value: '', label: 'Please select' },
-        { value: '1', label: 'Cash in hand' },
-        { value: '2', label: 'Bank Account' },
-      ],
+      options: accountOptions,
       required: true,
       sm: 6,
     },
@@ -58,12 +57,7 @@ const AdministrativeExpenses = () => {
       name: 'expense_account_id',
       label: 'Expense Account',
       type: 'select',
-      options: [
-        { value: '', label: 'Please select' },
-        { value: '1', label: 'Office Expenses' },
-        { value: '2', label: 'Utilities' },
-        { value: '3', label: 'Travel Expenses' },
-      ],
+      options: accountOptions,
       required: true,
       sm: 6,
     },
@@ -94,7 +88,6 @@ const AdministrativeExpenses = () => {
     setModalMode(mode);
     setSelectedExpense(expense);
     if (expense) {
-      // Transform nested account objects into flat form fields for API:
       setFormData({
         date: expense.date,
         from_account_id: expense.from_account ? expense.from_account.id.toString() : "",
@@ -146,7 +139,6 @@ const AdministrativeExpenses = () => {
   };
 
   const handleSubmit = () => {
-    // Call the API mutation according to the modal mode
     if(modalMode === 'add'){
       addExpense(formData).then(() => handleCloseModal());
     } else if(modalMode === 'edit'){
@@ -156,12 +148,10 @@ const AdministrativeExpenses = () => {
     }
   };
 
-  // Handle loading state
   if (isLoading) {
     return <Typography>Loading...</Typography>;
   }
 
-  // Handle error state
   if (isError) {
     return (
       <Typography color="error">
@@ -170,7 +160,6 @@ const AdministrativeExpenses = () => {
     );
   }
 
-  // Format the expenses only when data is available
   const formattedExpenses = administrativeExpenses?.map(exp => ({
     ...exp,
     fromAccount: exp.from_account ? exp.from_account.account_name : '-',
