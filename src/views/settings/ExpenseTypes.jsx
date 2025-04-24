@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import ViewDetails from '../../components/ViewDetails';
 import { 
   useExpenseTypesQuery, 
   useAddExpenseTypeMutation, 
@@ -23,6 +24,7 @@ const ExpenseTypes = () => {
   const [formData, setFormData] = useState({ name: '' });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [viewItem, setViewItem] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -38,6 +40,13 @@ const ExpenseTypes = () => {
     { id: 'name', label: 'Name' },
     { id: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleString() },
     { id: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleString() },
+  ];
+
+  // Add viewFields for view mode
+  const viewFields = [
+    { name: 'name', label: 'Name' },
+    { name: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleString() },
+    { name: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleString() },
   ];
 
   const handleChangePage = (event, newPage) => {
@@ -113,83 +122,96 @@ const ExpenseTypes = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Expense Types</Typography>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => handleOpenModal('add')}
-        >
-          Add new
-        </Button>
-      </Box>
-      <SharedTable
-        columns={columns}
-        data={expenseTypesData}
-        onEdit={(expenseType) => {
-          tableRef.current = null;
-          handleOpenModal('edit', expenseType);
-        }}
-        onDelete={handleDelete}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={expenseTypesData.length}
-        tableRef={tableRef}
-      />
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Expense Types, Add new'
-            : 'Edit Expense Type'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
-      
-      {/* Delete confirmation dialog */}
-      {deleteConfirmOpen && (
-        <Box sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1300,
-        }}>
-          <Box sx={{
-            backgroundColor: 'background.paper',
-            p: 4,
-            borderRadius: 1,
-            maxWidth: 400,
-            width: '100%',
-          }}>
-            <Typography variant="h6" gutterBottom>
-              Confirm Delete
-            </Typography>
-            <Typography sx={{ mb: 3 }}>
-              Are you sure you want to delete "{itemToDelete?.name}"?
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="contained" color="error" onClick={confirmDelete}>
-                Delete
-              </Button>
-            </Box>
+      {viewItem ? (
+        <>
+          <ViewDetails data={viewItem} title={`Expense Type Details - ID ${viewItem.id}`} fields={viewFields} />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => setViewItem(null)}>
+              Back to Expense Types
+            </Button>
           </Box>
-        </Box>
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Expense Types</Typography>
+            <Button
+              variant="contained"
+              startIcon={<PlusOutlined />}
+              onClick={() => handleOpenModal('add')}
+            >
+              Add new
+            </Button>
+          </Box>
+          <SharedTable
+            columns={columns}
+            data={expenseTypesData}
+            onView={(expenseType) => setViewItem(expenseType)}
+            onEdit={(expenseType) => {
+              tableRef.current = null;
+              handleOpenModal('edit', expenseType);
+            }}
+            onDelete={handleDelete}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            totalRows={expenseTypesData.length}
+            tableRef={tableRef}
+          />
+          <SharedModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            title={
+              modalMode === 'add'
+                ? 'Expense Types, Add new'
+                : 'Edit Expense Type'
+            }
+            formData={formData}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            mode={modalMode}
+            fields={fields}
+          />
+          {/* Delete confirmation dialog */}
+          {deleteConfirmOpen && (
+            <Box sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1300,
+            }}>
+              <Box sx={{
+                backgroundColor: 'background.paper',
+                p: 4,
+                borderRadius: 1,
+                maxWidth: 400,
+                width: '100%',
+              }}>
+                <Typography variant="h6" gutterBottom>
+                  Confirm Delete
+                </Typography>
+                <Typography sx={{ mb: 3 }}>
+                  Are you sure you want to delete "{itemToDelete?.name}"?
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" color="error" onClick={confirmDelete}>
+                    Delete
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

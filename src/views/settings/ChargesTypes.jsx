@@ -65,6 +65,14 @@ const ChargesTypes = () => {
     setSelectedChargeType(null);
   };
 
+  const handleView = (chargeType) => {
+    tableRef.current = null;
+    setModalMode('view');
+    setSelectedChargeType(chargeType);
+    setFormData(chargeType);
+    setModalOpen(true);
+  };
+
   const handleFormChange = (e) => {
     if (e.reset) {
       setFormData({ name: '' });
@@ -126,6 +134,7 @@ const ChargesTypes = () => {
       <SharedTable
         columns={columns}
         data={chargesData}
+        onView={(chargeType) => handleView(chargeType)}
         onEdit={(chargeType) => {
           tableRef.current = null;
           handleOpenModal('edit', chargeType);

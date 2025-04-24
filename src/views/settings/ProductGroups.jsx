@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import ViewDetails from '../../components/ViewDetails';
 import { useProductGroupsQuery, useAddProductGroupMutation, useUpdateProductGroupMutation } from '../../store/services/settings';
 
 const ProductGroups = () => {
@@ -20,9 +21,14 @@ const ProductGroups = () => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const tableRef = useRef();
+  const [viewItem, setViewItem] = useState(null);
 
   const fields = [
     { name: 'name', label: 'Name', required: true },
+  ];
+
+  const viewFields = [
+    { name: 'name', label: 'Name' },
   ];
 
   const columns = [
@@ -70,7 +76,7 @@ const ProductGroups = () => {
         await addProductGroup(formData);
         toast.success('Product Group created successfully');
       } else {
-        await updateProductGroup(formData);
+        await updateProductGroup({ id: selectedProductGroup.id, ...formData });
         toast.success('Product Group updated successfully');
       }
       await refetch();
@@ -82,44 +88,54 @@ const ProductGroups = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Product Groups</Typography>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => handleOpenModal('add')}
-        >
-          Add new
-        </Button>
-      </Box>
-      <SharedTable
-        columns={columns}
-        data={productGroupsData}
-        onEdit={(productGroup) => {
-          tableRef.current = null;
-          handleOpenModal('edit', productGroup);
-        }}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={productGroupsData.length}
-        tableRef={tableRef}
-      />
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Product Groups, Add new'
-            : 'Edit Product Group'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
+      {viewItem ? (
+        <>
+          <ViewDetails data={viewItem} title={`Product Group Details - ID ${viewItem.id}`} fields={viewFields} />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => setViewItem(null)}>
+              Back to Product Group List
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Product Groups</Typography>
+            <Button
+              variant="contained"
+              startIcon={<PlusOutlined />}
+              onClick={() => handleOpenModal('add')}
+            >
+              Add new
+            </Button>
+          </Box>
+          <SharedTable
+            columns={columns}
+            data={productGroupsData}
+            onView={(productGroup) => setViewItem(productGroup)}
+            onEdit={(productGroup) => {
+              tableRef.current = null;
+              handleOpenModal('edit', productGroup);
+            }}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            totalRows={productGroupsData.length}
+            tableRef={tableRef}
+          />
+          <SharedModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            title={modalMode === 'add' ? 'Product Groups, Add new' : 'Edit Product Group'}
+            formData={formData}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            mode={modalMode}
+            fields={fields}
+          />
+        </>
+      )}
     </Box>
   );
 };

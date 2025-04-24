@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import ViewDetails from '../../components/ViewDetails';
 import { useWarehousesQuery, useAddWarehouseMutation, useUpdateWarehouseMutation } from '../../store/services/settings';
 
 const Warehouses = () => {
@@ -22,6 +23,14 @@ const Warehouses = () => {
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [viewItem, setViewItem] = useState(null);
+
+  // Add viewFields for view mode
+  const viewFields = [
+    { name: 'name', label: 'Name' },
+    { name: 'details', label: 'Details' },
+    { name: 'active', label: 'Active', render: (data) => (data ? 'Yes' : 'No') },
+  ];
 
   const tableRef = useRef();
 
@@ -105,8 +114,7 @@ const Warehouses = () => {
         await addWarehouse(formData);
         toast.success('Warehouse created successfully');
       } else {
-        // Send the id separately and only send API body keys in 'body'
-        await updateWarehouse({ id: selectedWarehouse.id, body: formData });
+        await updateWarehouse({ id: selectedWarehouse.id, ...formData });
         toast.success('Warehouse updated successfully');
       }
       await refetch();
@@ -118,44 +126,62 @@ const Warehouses = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Warehouses</Typography>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => handleOpenModal('add')}
-        >
-          Add new
-        </Button>
-      </Box>
-      <SharedTable
-        columns={columns}
-        data={warehousesData}
-        onEdit={(warehouse) => {
-          tableRef.current = null;
-          handleOpenModal('edit', warehouse);
-        }}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={warehousesData.length}
-        tableRef={tableRef}
-      />
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Warehouses, Add new'
-            : 'Edit Warehouse'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
+      {viewItem ? (
+        <>
+          <ViewDetails data={viewItem} title={`Warehouse Details - ID ${viewItem.id}`} fields={viewFields} />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => setViewItem(null)}>
+              Back to Warehouse List
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Warehouses</Typography>
+            <Button
+              variant="contained"
+              startIcon={<PlusOutlined />}
+              onClick={() => handleOpenModal('add')}
+            >
+              Add new
+            </Button>
+          </Box>
+          <SharedTable
+            columns={columns}
+            data={warehousesData}
+            onView={(warehouse) =>
+              setViewItem({
+                name: warehouse.name,
+                details: warehouse.details,
+                active: warehouse.active === 1,
+                id: warehouse.id,
+                // ...other needed properties...
+              })
+            }
+            onEdit={(warehouse) => {
+              tableRef.current = null;
+              handleOpenModal('edit', warehouse);
+            }}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            totalRows={warehousesData.length}
+            tableRef={tableRef}
+          />
+          <SharedModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            title={modalMode === 'add' ? 'Warehouses, Add new' : 'Edit Warehouse'}
+            formData={formData}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            mode={modalMode}
+            fields={fields}
+          />
+        </>
+      )}
     </Box>
   );
 };

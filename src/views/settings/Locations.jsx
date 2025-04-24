@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import ViewDetails from '../../components/ViewDetails';
 import { 
   useLocationsQuery, 
   useAddLocationMutation, 
@@ -14,7 +15,6 @@ import { useWarehousesQuery } from '../../store/services/settings';
 
 const Locations = () => {
   const { data: locationsData = [], isLoading, isError, error, refetch } = useLocationsQuery();
-  console.log('locationsData', locationsData);
   const { data: warehousesData = [] } = useWarehousesQuery();
   const [addLocation] = useAddLocationMutation();
   const [updateLocation] = useUpdateLocationMutation();
@@ -31,6 +31,7 @@ const Locations = () => {
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [viewItem, setViewItem] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -74,6 +75,20 @@ const Locations = () => {
       label: 'Active',
       format: (value) => (value ? 'Yes' : 'No'),
     },
+  ];
+
+  const viewFields = [
+    { 
+      name: 'warehouse_id', 
+      label: 'Warehouse', 
+      render: (value) => {
+         const warehouse = warehousesData.find(w => w.id === value);
+         return warehouse ? warehouse.name : '-';
+      } 
+    },
+    { name: 'name', label: 'Name' },
+    { name: 'details', label: 'Details' },
+    { name: 'active', label: 'Active', render: (data) => data ? 'Yes' : 'No' },
   ];
 
   const handleChangePage = (event, newPage) => {
@@ -162,83 +177,96 @@ const Locations = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Locations</Typography>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => handleOpenModal('add')}
-        >
-          Add new
-        </Button>
-      </Box>
-      <SharedTable
-        columns={columns}
-        data={locationsData}
-        onEdit={(location) => {
-          tableRef.current = null;
-          handleOpenModal('edit', location);
-        }}
-        onDelete={handleDelete}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={locationsData.length}
-        tableRef={tableRef}
-      />
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Locations, Add new'
-            : 'Edit Location'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
-      
-      {/* Delete confirmation dialog */}
-      {deleteConfirmOpen && (
-        <Box sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1300,
-        }}>
-          <Box sx={{
-            backgroundColor: 'background.paper',
-            p: 4,
-            borderRadius: 1,
-            maxWidth: 400,
-            width: '100%',
-          }}>
-            <Typography variant="h6" gutterBottom>
-              Confirm Delete
-            </Typography>
-            <Typography sx={{ mb: 3 }}>
-              Are you sure you want to delete "{itemToDelete?.name}"?
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="contained" color="error" onClick={confirmDelete}>
-                Delete
-              </Button>
-            </Box>
+      {viewItem ? (
+        <>
+          <ViewDetails data={viewItem} title={`Location Details - ID ${viewItem.id}`} fields={viewFields} />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => setViewItem(null)}>
+              Back to Location List
+            </Button>
           </Box>
-        </Box>
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Locations</Typography>
+            <Button
+              variant="contained"
+              startIcon={<PlusOutlined />}
+              onClick={() => handleOpenModal('add')}
+            >
+              Add new
+            </Button>
+          </Box>
+          <SharedTable
+            columns={columns}
+            data={locationsData}
+            onView={(location) => setViewItem(location)}
+            onEdit={(location) => {
+              tableRef.current = null;
+              handleOpenModal('edit', location);
+            }}
+            onDelete={handleDelete}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            totalRows={locationsData.length}
+            tableRef={tableRef}
+          />
+          <SharedModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            title={
+              modalMode === 'add'
+                ? 'Locations, Add new'
+                : 'Edit Location'
+            }
+            formData={formData}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            mode={modalMode}
+            fields={fields}
+          />
+          {/* Delete confirmation dialog */}
+          {deleteConfirmOpen && (
+            <Box sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1300,
+            }}>
+              <Box sx={{
+                backgroundColor: 'background.paper',
+                p: 4,
+                borderRadius: 1,
+                maxWidth: 400,
+                width: '100%',
+              }}>
+                <Typography variant="h6" gutterBottom>
+                  Confirm Delete
+                </Typography>
+                <Typography sx={{ mb: 3 }}>
+                  Are you sure you want to delete "{itemToDelete?.name}"?
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" color="error" onClick={confirmDelete}>
+                    Delete
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

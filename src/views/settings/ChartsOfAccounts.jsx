@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
+import ViewDetails from '../../components/ViewDetails';
 import { 
   useChartsOfAccountsQuery, 
   useAddChartOfAccountMutation, 
@@ -29,6 +30,7 @@ const ChartsOfAccounts = () => {
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [viewItem, setViewItem] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -72,6 +74,21 @@ const ChartsOfAccounts = () => {
       type: 'checkbox',
       sm: 6,
     },
+  ];
+
+  const viewFields = [
+    { name: 'nature', label: 'Nature' },
+    { 
+      name: 'parent_id', 
+      label: 'Parent Account', 
+      render: (value) => {
+         let parent = typeof value === 'object' && value !== null ? value : chartsData.find(a => a.id === value);
+         return parent ? `${parent.account_code} - ${parent.account_name}` : '-';
+      }
+    },
+    { name: 'account_code', label: 'Account Code' },
+    { name: 'account_name', label: 'Account Name' },
+    { name: 'is_transaction_account', label: 'Is Transaction Account', render: (value) => value ? 'Yes' : 'No' },
   ];
 
   const columns = [
@@ -183,83 +200,92 @@ const ChartsOfAccounts = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Charts of Accounts</Typography>
-        <Button
-          variant="contained"
-          startIcon={<PlusOutlined />}
-          onClick={() => handleOpenModal('add')}
-        >
-          Add new
-        </Button>
-      </Box>
-      <SharedTable
-        columns={columns}
-        data={chartsData}
-        onEdit={(account) => {
-          tableRef.current = null;
-          handleOpenModal('edit', account);
-        }}
-        onDelete={handleDelete}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        totalRows={chartsData.length}
-        tableRef={tableRef}
-      />
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Charts of Accounts, Add new'
-            : 'Edit Chart of Account'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
-      
-      {/* Delete confirmation dialog */}
-      {deleteConfirmOpen && (
-        <Box sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1300,
-        }}>
-          <Box sx={{
-            backgroundColor: 'background.paper',
-            p: 4,
-            borderRadius: 1,
-            maxWidth: 400,
-            width: '100%',
-          }}>
-            <Typography variant="h6" gutterBottom>
-              Confirm Delete
-            </Typography>
-            <Typography sx={{ mb: 3 }}>
-              Are you sure you want to delete "{itemToDelete?.account_name}"?
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="contained" color="error" onClick={confirmDelete}>
-                Delete
-              </Button>
-            </Box>
+      {viewItem ? (
+        <>
+          <ViewDetails data={viewItem} title={`Chart of Account Details - ID ${viewItem.id}`} fields={viewFields} />
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={() => setViewItem(null)}>
+              Back to Chart List
+            </Button>
           </Box>
-        </Box>
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Charts of Accounts</Typography>
+            <Button
+              variant="contained"
+              startIcon={<PlusOutlined />}
+              onClick={() => handleOpenModal('add')}
+            >
+              Add new
+            </Button>
+          </Box>
+          <SharedTable
+            columns={columns}
+            data={chartsData}
+            onView={(account) => setViewItem(account)}
+            onEdit={(account) => {
+              tableRef.current = null;
+              handleOpenModal('edit', account);
+            }}
+            onDelete={handleDelete}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            totalRows={chartsData.length}
+            tableRef={tableRef}
+          />
+          <SharedModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            title={modalMode === 'add' ? 'Charts of Accounts, Add new' : 'Edit Chart of Account'}
+            formData={formData}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            mode={modalMode}
+            fields={fields}
+          />
+          {/* Delete confirmation dialog remains unchanged */}
+          {deleteConfirmOpen && (
+            <Box sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1300,
+            }}>
+              <Box sx={{
+                backgroundColor: 'background.paper',
+                p: 4,
+                borderRadius: 1,
+                maxWidth: 400,
+                width: '100%',
+              }}>
+                <Typography variant="h6" gutterBottom>
+                  Confirm Delete
+                </Typography>
+                <Typography sx={{ mb: 3 }}>
+                  Are you sure you want to delete "{itemToDelete?.account_name}"?
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" color="error" onClick={confirmDelete}>
+                    Delete
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

@@ -6,6 +6,7 @@ import { useConfigQuery, useUpdateConfigMutation, useStoreConfigMutation } from 
 const Config = () => {
   const navigate = useNavigate();
   const { data: configData, isLoading, isError, error } = useConfigQuery();
+  console.log('Config data:', configData);
   const [updateConfig, { isLoading: isUpdating }] = useUpdateConfigMutation();
   const [storeConfig, { isLoading: isStoring }] = useStoreConfigMutation();
 
@@ -21,16 +22,14 @@ const Config = () => {
   });
 
   useEffect(() => {
-    if (configData && configData.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        ...configData[0],
-      }));
+    if (configData) {
+      // If configData is an object, set it directly; if an array, use the first element.
+      setFormData(Array.isArray(configData) ? configData[0] : configData);
     }
   }, [configData]);
 
   useEffect(() => {
-    if (!isLoading && configData && configData.length === 0) {
+    if (!isLoading && (!configData || (Array.isArray(configData) && configData.length === 0))) {
       storeConfig(formData).unwrap()
         .then((data) => setFormData(data))
         .catch((err) => console.error('Error storing config:', err));
@@ -47,7 +46,12 @@ const Config = () => {
 
   const handleSubmit = async () => {
     try {
-      await updateConfig(formData).unwrap();
+      const payload = {
+        ...formData,
+        invoice_cycle_in_days: parseInt(formData.invoice_cycle_in_days, 10),
+        invoice_cycle_due_days: parseInt(formData.invoice_cycle_due_days, 10)
+      };
+      await updateConfig(payload).unwrap();
       navigate('/settings/config');
     } catch (error) {
       console.error('Error updating config:', error);
