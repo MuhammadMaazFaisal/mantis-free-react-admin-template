@@ -167,7 +167,7 @@ const SharedTable = ({
             },
           }}
         />
-        <Button
+        {/* <Button
           variant="outlined"
           startIcon={<DownloadOutlined />}
           onClick={handlePrint}
@@ -185,7 +185,7 @@ const SharedTable = ({
           }}
         >
           Download
-        </Button>
+        </Button> */}
       </Box>
 
       {/* Table Container */}
