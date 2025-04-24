@@ -23,9 +23,9 @@ export const reportService = createApi({
       transformResponse: (response) => (response.success ? response.data : {})
     }),
     getPartyLedger: builder.query({
-      query: ({ fromDate, toDate, accountId }) => ({
+      query: ({ fromDate, toDate, account_id }) => ({
         url: '/reports/party-ledger',
-        params: { fromDate, toDate, account_id: accountId }
+        params: { fromDate, toDate, account_id }
       }),
     }),
     getLotLedger: builder.query({

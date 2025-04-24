@@ -4,36 +4,24 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { useGetPartyLedgerQuery } from '../../store/services/reportService';
+import { useChartsOfAccountsQuery } from '../../store/services/settings';
 import SharedTable from '../../components/SharedTable';
-
-// Mock data for dropdowns
-const accounts = [
-  'S A Rice',
-  'Kafaaf Enterprises',
-  'MANNAL Foods',
-  'Asian Grain',
-  'Zafar Bhai Broker',
-  'Abdul Rauf Abdul Aziz',
-  'Kafi Commodities',
-  'Ali Commodities',
-  'S M Ismail',
-  'AFN Rice',
-  'Munawar shah Rice',
-  'Dhanwani AK International',
-  'Saad International (Siraj Sagar)',
-  'Zohra Rice',
-];
 
 const PartyLedger = () => {
   const [formData, setFormData] = useState({
     fromDate: null,
     toDate: null,
     account: '',
-    lotNumber: '',
-    fileNumber: '',
   });
   const [queryParams, setQueryParams] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
   const { data, error, isLoading } = useGetPartyLedgerQuery(queryParams || {}, { skip: !queryParams });
+  const { data: accountsData, isLoading: isAccountsLoading, error: accountsError } = useChartsOfAccountsQuery();
+
+  // Helper function to convert dayjs date to "YYYY-MM-DD"
+  const dateToString = (date) => date ? date.format("YYYY-MM-DD") : null;
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -46,11 +34,25 @@ const PartyLedger = () => {
 
   const handleSearch = () => {
     setQueryParams({
-      fromDate: formData.fromDate,
-      toDate: formData.toDate,
-      accountId: formData.account,
+      fromDate: dateToString(formData.fromDate),
+      toDate: dateToString(formData.toDate),
+      account_id: formData.account
     });
   };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const tableData = (data?.data || []).map((row, index) => ({
+    ...row,
+    id: row.id ?? row.reference ?? index,
+  }));
 
   return (
     <Box>
@@ -83,38 +85,20 @@ const PartyLedger = () => {
                 onChange={handleFormChange}
                 fullWidth
               >
-                <MenuItem value="">Please select</MenuItem>
-                {accounts.map((account) => (
-                  <MenuItem key={account} value={account}>
-                    {account}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                select
-                label="Lot #"
-                name="lotNumber"
-                value={formData.lotNumber}
-                onChange={handleFormChange}
-                fullWidth
-              >
-                <MenuItem value="">Please select</MenuItem>
-                {/* Add lot numbers if available */}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                select
-                label="File #"
-                name="fileNumber"
-                value={formData.fileNumber}
-                onChange={handleFormChange}
-                fullWidth
-              >
-                <MenuItem value="">Please select</MenuItem>
-                {/* Add file numbers if available */}
+                <MenuItem value="">
+                  Please select
+                </MenuItem>
+                { isAccountsLoading ? (
+                  <MenuItem value=""><em>Loading...</em></MenuItem>
+                ) : accountsError ? (
+                  <MenuItem value=""><em>Error loading accounts</em></MenuItem>
+                ) : (
+                  accountsData.map((account) => (
+                    <MenuItem key={account.id} value={account.id}>
+                      {account.account_name}
+                    </MenuItem>
+                  ))
+                )}
               </TextField>
             </Grid>
             <Grid item xs={12}>
@@ -137,7 +121,12 @@ const PartyLedger = () => {
             { id: "credit", label: "CREDIT" },
             { id: "balance", label: "BALANCE" }
           ]}
-          data={data?.data || []}
+          data={tableData}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          handleChangePage={handleChangePage}
+          handleChangeRowsPerPage={handleChangeRowsPerPage}
+          totalRows={tableData.length}
           showActions={false}
         />
       }
