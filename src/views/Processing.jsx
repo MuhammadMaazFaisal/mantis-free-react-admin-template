@@ -163,9 +163,6 @@ const Processing = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedProcessing(null);
-    if (modalMode === 'view') {
-      navigate('/processing');
-    }
   };
 
   const handleFormChange = (e) => {
@@ -331,7 +328,7 @@ const Processing = () => {
             renderCustomContent={renderCustomContent}
           />
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/processing')}>
+            <Button variant="outlined" onClick={handleCloseModal}>
               Back to list
             </Button>
           </Box>

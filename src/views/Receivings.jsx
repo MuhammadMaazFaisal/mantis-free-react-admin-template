@@ -174,11 +174,9 @@ const Receivings = () => {
   };
 
   const handleCloseModal = () => {
+    // Close view detail mode without navigation
     setModalOpen(false);
     setSelectedReceiving(null);
-    if (modalMode === 'view') {
-      navigate('/receivings');
-    }
   };
 
   const handleFormChange = (e) => {
@@ -265,7 +263,7 @@ const Receivings = () => {
             renderCustomContent={renderReceivingDetails}
           />
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/receivings')}>
+            <Button variant="outlined" onClick={handleCloseModal}>
               Back to Receiving List
             </Button>
           </Box>

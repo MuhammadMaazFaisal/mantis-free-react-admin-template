@@ -115,9 +115,6 @@ const AdministrativeExpenses = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedExpense(null);
-    if (modalMode === 'view') {
-      navigate('/administrative-expenses');
-    }
   };
 
   const handleFormChange = (e) => {
@@ -182,7 +179,7 @@ const AdministrativeExpenses = () => {
             fields={fields}
           />
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/administrative-expenses')}>
+            <Button variant="outlined" onClick={handleCloseModal}>
               Back to list
             </Button>
           </Box>

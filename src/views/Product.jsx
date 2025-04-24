@@ -147,9 +147,6 @@ const Product = () => {
     const handleCloseModal = () => {
         setModalOpen(false);
         setSelectedProduct(null);
-        if (modalMode === 'view') {
-            navigate('/product');
-        }
     };
 
     const handleFormChange = (e) => {
@@ -247,7 +244,7 @@ const Product = () => {
                         fields={viewFields}
                     />
                     <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                        <Button variant="outlined" onClick={() => navigate('/product')}>
+                        <Button variant="outlined" onClick={handleCloseModal}>
                             Back to Product List
                         </Button>
                         <Button 

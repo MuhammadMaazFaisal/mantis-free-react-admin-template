@@ -66,7 +66,6 @@ const ChargesTypes = () => {
   };
 
   const handleView = (chargeType) => {
-    tableRef.current = null;
     setModalMode('view');
     setSelectedChargeType(chargeType);
     setFormData(chargeType);

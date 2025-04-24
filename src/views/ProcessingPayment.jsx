@@ -138,9 +138,6 @@ const ProcessingPayment = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedPaymentReceiving(null);
-    if (modalMode === 'view') {
-      navigate('/processing-payment');
-    }
   };
 
   const handleFormChange = (e) => {
@@ -204,7 +201,7 @@ const ProcessingPayment = () => {
             fields={viewFields}
           />
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/processing-payment')}>
+            <Button variant="outlined" onClick={handleCloseModal}>
               Back to list
             </Button>
           </Box>

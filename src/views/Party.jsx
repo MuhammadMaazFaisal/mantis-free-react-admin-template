@@ -133,9 +133,6 @@ const Party = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedParty(null);
-    if (modalMode === 'view') {
-      navigate('/party');
-    }
   };
 
   const handleFormChange = (e) => {
@@ -231,7 +228,7 @@ const Party = () => {
             fields={viewFields}
           />
           <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/party')}>
+            <Button variant="outlined" onClick={handleCloseModal}>
               Back to Party List
             </Button>
             <Button 
