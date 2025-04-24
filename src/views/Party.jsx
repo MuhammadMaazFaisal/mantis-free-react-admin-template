@@ -70,10 +70,17 @@ const Party = () => {
 
   const columns = [
     { id: 'id', label: 'ID' },
+    { id: 'user_id', label: 'User ID' },
     { id: 'name', label: 'Party Name' },
+    { id: 'address', label: 'Address' },
     { id: 'contact_number', label: 'Contact Number' },
     { id: 'discount', label: 'Discount (%)' },
+    { id: 'opening_balance_date', label: 'Opening Balance Date' },
+    { id: 'opening_balance', label: 'Opening Balance' },
+    { id: 'remarks', label: 'Remarks' },
     { id: 'active', label: 'Status', format: (value) => value ? 'Active' : 'Inactive' },
+    { id: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
+    { id: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
   ];
 
   const viewFields = [
