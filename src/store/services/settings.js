@@ -173,6 +173,14 @@ export const settingsApi = createApi({
       }),
       transformResponse: (response) => response.success ? response.data : [],
     }),
+    storeConfig: builder.mutation({
+      query: (newConfig) => ({
+        url: '/config',
+        method: 'POST',
+        body: newConfig,
+      }),
+      transformResponse: (response) => response.success ? response.data : [],
+    }),
     expenseTypes: builder.query({
       query: () => '/expense-types',
       transformResponse: (response) => response.success ? response.data : [],
@@ -244,7 +252,7 @@ export const {
   useLocationsQuery, useGetLocationByIdQuery, useAddLocationMutation, useUpdateLocationMutation, useDeleteLocationMutation,
   useWarehousesQuery, useGetWarehouseByIdQuery, useAddWarehouseMutation, useUpdateWarehouseMutation, useDeleteWarehouseMutation,
   useUnitsQuery, useGetUnitByIdQuery, useAddUnitMutation, useUpdateUnitMutation, useDeleteUnitMutation,
-  useConfigQuery, useUpdateConfigMutation,
+  useConfigQuery, useUpdateConfigMutation, useStoreConfigMutation,
   useExpenseTypesQuery, useGetExpenseTypeByIdQuery, useAddExpenseTypeMutation, useUpdateExpenseTypeMutation, useDeleteExpenseTypeMutation,
   useChargesTypesQuery, useGetChargeTypeByIdQuery, useAddChargeTypeMutation, useUpdateChargeTypeMutation, useDeleteChargeTypeMutation
 } = settingsApi;

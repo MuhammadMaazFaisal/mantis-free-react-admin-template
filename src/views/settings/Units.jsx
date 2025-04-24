@@ -33,17 +33,16 @@ const Units = () => {
 
   const columns = [
     { id: 'id', label: 'ID' },
+    { id: 'user_id', label: 'User ID' },
     { id: 'name', label: 'Name' },
     { id: 'details', label: 'Details' },
-    { id: 'addedBy', label: 'Added By' },
-    { id: 'addedOn', label: 'Added On' },
-    { id: 'modifiedBy', label: 'Modified By' },
-    { id: 'modifiedOn', label: 'Modified On' },
-    {
-      id: 'active',
-      label: 'Active',
-      format: (value) => (value ? 'Yes' : 'No'),
-    },
+    { id: 'active', label: 'Active', format: (value) => (value ? 'Yes' : 'No') },
+    { id: 'added_by', label: 'Added By' },
+    { id: 'added_on', label: 'Added On' },
+    { id: 'created_at', label: 'Created At' },
+    { id: 'modified_by', label: 'Modified By' },
+    { id: 'modified_on', label: 'Modified On' },
+    { id: 'updated_at', label: 'Updated At' },
   ];
 
   const handleChangePage = (event, newPage) => {

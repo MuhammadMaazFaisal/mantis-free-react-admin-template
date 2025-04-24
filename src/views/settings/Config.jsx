@@ -1,29 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Button, Box, TextField, Input, CircularProgress, Alert } from '@mui/material';
+import { Typography, Button, Box, TextField, Input, CircularProgress, Alert, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useConfigQuery, useUpdateConfigMutation } from '../../store/services/settings';
+import { useConfigQuery, useUpdateConfigMutation, useStoreConfigMutation } from '../../store/services/settings';
 
 const Config = () => {
   const navigate = useNavigate();
   const { data: configData, isLoading, isError, error } = useConfigQuery();
   const [updateConfig, { isLoading: isUpdating }] = useUpdateConfigMutation();
-  
+  const [storeConfig, { isLoading: isStoring }] = useStoreConfigMutation();
+
   const [formData, setFormData] = useState({
-    lotNumberSerial: '',
-    invoiceCycleInDays: '',
-    invoiceCycleDueDays: '',
-    companyFullName: '',
-    companyShort: '',
-    contactNumber: '',
+    lot_number_serial: '',
+    invoice_cycle_in_days: '',
+    invoice_cycle_due_days: '',
+    company_full_name: '',
+    company_short: '',
+    contact_number: '',
     emails: '',
     address: '',
   });
 
   useEffect(() => {
     if (configData && configData.length > 0) {
-      setFormData(configData[0]);
+      setFormData((prev) => ({
+        ...prev,
+        ...configData[0],
+      }));
     }
   }, [configData]);
+
+  useEffect(() => {
+    if (!isLoading && configData && configData.length === 0) {
+      storeConfig(formData).unwrap()
+        .then((data) => setFormData(data))
+        .catch((err) => console.error('Error storing config:', err));
+    }
+  }, [configData, isLoading, formData, storeConfig]);
 
   const handleFormChange = (e) => {
     const { name, value, files } = e.target;
@@ -42,7 +54,7 @@ const Config = () => {
     }
   };
 
-  if (isLoading) return <CircularProgress />;
+  if (isLoading || isStoring) return <CircularProgress />;
   if (isError) return <Alert severity="error">Error: {error.data?.message || 'Failed to load config'}</Alert>;
 
   return (
@@ -51,8 +63,8 @@ const Config = () => {
       <Box component="form" noValidate autoComplete="off">
         <TextField
           label="Lot Number Serial"
-          name="lotNumberSerial"
-          value={formData.lotNumberSerial || ''}
+          name="lot_number_serial"
+          value={formData.lot_number_serial || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -60,8 +72,8 @@ const Config = () => {
         />
         <TextField
           label="Invoice Cycle In Days"
-          name="invoiceCycleInDays"
-          value={formData.invoiceCycleInDays || ''}
+          name="invoice_cycle_in_days"
+          value={formData.invoice_cycle_in_days || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -70,8 +82,8 @@ const Config = () => {
         />
         <TextField
           label="Invoice Cycle Due Days"
-          name="invoiceCycleDueDays"
-          value={formData.invoiceCycleDueDays || ''}
+          name="invoice_cycle_due_days"
+          value={formData.invoice_cycle_due_days || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -80,8 +92,8 @@ const Config = () => {
         />
         <TextField
           label="Company Full Name"
-          name="companyFullName"
-          value={formData.companyFullName || ''}
+          name="company_full_name"
+          value={formData.company_full_name || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
@@ -89,13 +101,13 @@ const Config = () => {
         />
         <TextField
           label="Company Short"
-          name="companyShort"
-          value={formData.companyShort || ''}
+          name="company_short"
+          value={formData.company_short || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"
         />
-        <Box sx={{ mt: 2, mb: 2 }}>
+        {/* <Box sx={{ mt: 2, mb: 2 }}>
           <Typography variant="body1">Logo</Typography>
           <Input
             type="file"
@@ -104,11 +116,11 @@ const Config = () => {
             fullWidth
             sx={{ border: '1px dashed #ccc', p: 2 }}
           />
-        </Box>
+        </Box> */}
         <TextField
           label="Contact Number"
-          name="contactNumber"
-          value={formData.contactNumber || ''}
+          name="contact_number"
+          value={formData.contact_number || ''}
           onChange={handleFormChange}
           fullWidth
           margin="normal"

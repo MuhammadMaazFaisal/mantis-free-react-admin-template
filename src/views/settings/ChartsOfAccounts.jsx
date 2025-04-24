@@ -22,10 +22,10 @@ const ChartsOfAccounts = () => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [formData, setFormData] = useState({
     nature: '',
-    parent: '',
-    accountCode: '',
-    accountName: '',
-    isTransactionAccount: false,
+    parent_id: '',
+    account_code: '',
+    account_name: '',
+    is_transaction_account: false,
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -52,22 +52,22 @@ const ChartsOfAccounts = () => {
       sm: 6,
     },
     {
-      name: 'parent',
+      name: 'parent_id',
       label: 'Parent Account',
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
         ...chartsData.map(account => ({
           value: account.id,
-          label: `${account.accountCode} - ${account.accountName}`
+          label: `${account.account_code} - ${account.account_name}`
         }))
       ],
       sm: 6,
     },
-    { name: 'accountCode', label: 'Account Code', required: true, sm: 6 },
-    { name: 'accountName', label: 'Account Name', required: true, sm: 6 },
+    { name: 'account_code', label: 'Account Code', required: true, sm: 6 },
+    { name: 'account_name', label: 'Account Name', required: true, sm: 6 },
     {
-      name: 'isTransactionAccount',
+      name: 'is_transaction_account',
       label: 'Is Transaction Account',
       type: 'checkbox',
       sm: 6,
@@ -78,11 +78,11 @@ const ChartsOfAccounts = () => {
     { id: 'id', label: 'ID' },
     { id: 'nature', label: 'Nature' },
     { 
-      id: 'parent', 
+      id: 'parent_id', 
       label: 'Parent Account',
       format: (value, row) => {
-        const parent = chartsData.find(a => a.id === value);
-        return parent ? `${parent.accountCode} - ${parent.accountName}` : '-';
+        let parent = typeof value === 'object' && value !== null ? value : chartsData.find(a => a.id === value);
+        return parent ? `${parent.account_code || '-'} - ${parent.account_name || '-'}` : '-';
       }
     },
     { id: 'account_code', label: 'Account Code' },
@@ -111,10 +111,10 @@ const ChartsOfAccounts = () => {
     } else {
       setFormData({
         nature: '',
-        parent: '',
-        accountCode: '',
-        accountName: '',
-        isTransactionAccount: false,
+        parent_id: '',
+        account_code: '',
+        account_name: '',
+        is_transaction_account: false,
       });
     }
     setModalOpen(true);
@@ -129,27 +129,28 @@ const ChartsOfAccounts = () => {
     if (e.reset) {
       setFormData({
         nature: '',
-        parent: '',
-        accountCode: '',
-        accountName: '',
-        isTransactionAccount: false,
+        parent_id: '',
+        account_code: '',
+        account_name: '',
+        is_transaction_account: false,
       });
     } else {
-      const { name, value, checked } = e.target;
+      const { name, type, value, checked } = e.target;
       setFormData((prev) => ({
         ...prev,
-        [name]: name === 'isTransactionAccount' ? checked : value,
+        [name]: type === 'checkbox' ? checked : value,
       }));
     }
   };
 
   const handleSubmit = async () => {
     try {
+      const { id, ...payload } = formData;  // remove id from payload
       if (modalMode === 'add') {
-        await addChartOfAccount(formData).unwrap();
+        await addChartOfAccount(payload).unwrap();
         toast.success('Chart of Account created successfully');
       } else {
-        await updateChartOfAccount({ id: selectedAccount.id, ...formData }).unwrap();
+        await updateChartOfAccount({ id: selectedAccount.id, ...payload }).unwrap();
         toast.success('Chart of Account updated successfully');
       }
       await refetch();
@@ -247,7 +248,7 @@ const ChartsOfAccounts = () => {
               Confirm Delete
             </Typography>
             <Typography sx={{ mb: 3 }}>
-              Are you sure you want to delete "{itemToDelete?.accountName}"?
+              Are you sure you want to delete "{itemToDelete?.account_name}"?
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
