@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button, Box, CircularProgress } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
@@ -8,7 +8,7 @@ import ViewDetails from '../../components/ViewDetails';
 import { useProductGroupsQuery, useAddProductGroupMutation, useUpdateProductGroupMutation } from '../../store/services/settings';
 
 const ProductGroups = () => {
-  const { data: productGroupsData = [], refetch } = useProductGroupsQuery();
+  const { data: productGroupsData = [], refetch, isLoading } = useProductGroupsQuery();
   const [addProductGroup] = useAddProductGroupMutation();
   const [updateProductGroup] = useUpdateProductGroupMutation();
 
@@ -85,6 +85,12 @@ const ProductGroups = () => {
       toast.error(error.message || 'Operation failed');
     }
   };
+
+  if (isLoading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <CircularProgress />
+    </Box>
+  );
 
   return (
     <Box>

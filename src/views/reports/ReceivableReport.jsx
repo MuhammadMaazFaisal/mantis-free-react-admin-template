@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, CircularProgress } from '@mui/material';
 import SharedTable from '../../components/SharedTable';
 import { useGetReceivableReportQuery } from '../../store/services/reportService';
 
@@ -17,7 +17,11 @@ const ReceivableReport = () => {
     setPage(0);
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <CircularProgress />
+    </Box>
+  );
   if (error) return <div>Error loading receivable report</div>;
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box, TextField, Button } from '@mui/material';
+import { Typography, Box, TextField, Button, CircularProgress } from '@mui/material';
 import { useGetLotLedgerQuery } from '../../store/services/reportService';
 import SharedTable from '../../components/SharedTable';
 
@@ -39,6 +39,12 @@ const LotLedger = () => {
 		setTxnPage(0);
 	};
 
+	if (isLoading) return (
+		<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+			<CircularProgress />
+		</Box>
+	);
+
 	return (
 		<Box>
 			<Typography variant="h4" mb={3}>Lot Ledger</Typography>
@@ -51,8 +57,7 @@ const LotLedger = () => {
 				/>
 				<Button variant="contained" onClick={handleSearch}>Search</Button>
 			</Box>
-			{isLoading && <div>Loading...</div>}
-			{error && <div>Error loading lot ledger</div>}
+				{error && <div>Error loading lot ledger</div>}
 			{data && (
 				<>
 					{/* Table for lot details */}

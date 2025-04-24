@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button, Box, CircularProgress } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
@@ -8,7 +8,7 @@ import ViewDetails from '../../components/ViewDetails';
 import { useUnitsQuery, useAddUnitMutation, useUpdateUnitMutation } from '../../store/services/settings';
 
 const Units = () => {
-  const { data: unitsData = [], refetch } = useUnitsQuery();
+  const { data: unitsData = [], refetch, isLoading } = useUnitsQuery();
   const [addUnit] = useAddUnitMutation();
   const [updateUnit] = useUpdateUnitMutation();
 
@@ -113,6 +113,14 @@ const Units = () => {
       toast.error(error.message || 'Operation failed');
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>

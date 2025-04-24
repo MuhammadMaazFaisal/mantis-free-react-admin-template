@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button, Box, CircularProgress } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { useGetProcessingsQuery, useAddProcessingMutation, useUpdateProcessingMutation } from '../store/services/processing';
 import { useGetPartiesQuery } from '../store/services/party';
@@ -304,7 +304,11 @@ const Processing = () => {
   );
 
   if (isLoading) {
-    return <Typography>Loading...</Typography>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (isError) {

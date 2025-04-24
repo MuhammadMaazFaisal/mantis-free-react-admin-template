@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button, Box, CircularProgress } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import SharedTable from '../../components/SharedTable';
@@ -117,7 +117,11 @@ const ExpenseTypes = () => {
     }
   };
 
-  if (isLoading) return <Typography>Loading...</Typography>;
+  if (isLoading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <CircularProgress />
+    </Box>
+  );
   if (isError) return <Typography color="error">Error: {error.data?.message || 'Failed to load data'}</Typography>;
 
   return (

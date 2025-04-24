@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box, Alert, Snackbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Typography, Button, Box, Alert, Snackbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useGetPartiesQuery, useAddPartyMutation, useUpdatePartyMutation, useDeletePartyMutation } from '../store/services/party';
 import SharedTable from '../components/SharedTable';
@@ -211,7 +211,13 @@ const Party = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  if (isLoading) return <Typography>Loading parties...</Typography>;
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (isError) return <Alert severity="error">Error: {error?.data?.message || 'Failed to load parties'}</Alert>;
 
   return (
@@ -235,14 +241,14 @@ const Party = () => {
             >
               Edit Party
             </Button>
-            <Button 
+            {/* <Button 
               variant="contained" 
               color="error"
               startIcon={<DeleteOutlined />}
               onClick={() => handleDeleteClick(selectedParty)}
             >
               Delete
-            </Button>
+            </Button> */}
           </Box>
         </>
       ) : (

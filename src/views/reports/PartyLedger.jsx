@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box, TextField, Button, MenuItem, Grid } from '@mui/material';
+import { Typography, Box, TextField, Button, MenuItem, Grid, CircularProgress } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -109,7 +109,11 @@ const PartyLedger = () => {
           </Grid>
         </Box>
       </LocalizationProvider>
-      {isLoading && <div>Loading...</div>}
+      {isLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
       {error && <div>Error loading party ledger</div>}
       {data && 
         <SharedTable

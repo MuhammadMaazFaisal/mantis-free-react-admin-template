@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box, TextField, MenuItem } from '@mui/material';
+import { Typography, Box, TextField, MenuItem, CircularProgress } from '@mui/material';
 import { useGetStockReportQuery } from '../../store/services/reportService';
 import { useWarehousesQuery } from '../../store/services/settings';
 import SharedTable from '../../components/SharedTable';
@@ -62,7 +62,11 @@ const StockReport = () => {
           ))}
         </TextField>
       </Box>
-      {isLoading && <div>Loading...</div>}
+      {isLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
       {error && <div>Error loading stock report</div>}
       {tableData.length > 0 && 
         <SharedTable

@@ -6,27 +6,28 @@ import SharedTable from '../../components/SharedTable';
 import SharedModal from '../../components/SharedModal';
 import ViewDetails from '../../components/ViewDetails';
 import { 
-  useChartsOfAccountsQuery, 
-  useAddChartOfAccountMutation, 
-  useUpdateChartOfAccountMutation,
-  useDeleteChartOfAccountMutation 
+  useLocationsQuery, 
+  useAddLocationMutation, 
+  useUpdateLocationMutation,
+  useDeleteLocationMutation 
 } from '../../store/services/settings';
+import { useWarehousesQuery } from '../../store/services/settings';
 
-const ChartsOfAccounts = () => {
-  const { data: chartsData = [], isLoading, isError, error, refetch } = useChartsOfAccountsQuery();
-  const [addChartOfAccount] = useAddChartOfAccountMutation();
-  const [updateChartOfAccount] = useUpdateChartOfAccountMutation();
-  const [deleteChartOfAccount] = useDeleteChartOfAccountMutation();
+const Locations = () => {
+  const { data: locationsData = [], isLoading, isError, error, refetch } = useLocationsQuery();
+  const { data: warehousesData = [] } = useWarehousesQuery();
+  const [addLocation] = useAddLocationMutation();
+  const [updateLocation] = useUpdateLocationMutation();
+  const [deleteLocation] = useDeleteLocationMutation();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
-  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [formData, setFormData] = useState({
-    nature: '',
-    parent_id: '',
-    account_code: '',
-    account_name: '',
-    is_transaction_account: false,
+    warehouse_id: '',
+    name: '',
+    details: '',
+    active: true,
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -39,76 +40,55 @@ const ChartsOfAccounts = () => {
 
   const fields = [
     {
-      name: 'nature',
-      label: 'Nature',
+      name: 'warehouse_id',
+      label: 'Warehouse',
       type: 'select',
       options: [
         { value: '', label: 'Please select' },
-        { value: 'A', label: 'Asset' },
-        { value: 'L', label: 'Liability' },
-        { value: 'E', label: 'Equity' },
-        { value: 'R', label: 'Revenue' },
-        { value: 'X', label: 'Expense' },
+        ...warehousesData.map(warehouse => ({
+          value: warehouse.id,
+          label: warehouse.name
+        }))
       ],
       required: true,
       sm: 6,
     },
-    {
-      name: 'parent_id',
-      label: 'Parent Account',
-      type: 'select',
-      options: [
-        { value: '', label: 'Please select' },
-        ...chartsData.map(account => ({
-          value: account.id,
-          label: `${account.account_code} - ${account.account_name}`
-        }))
-      ],
-      sm: 6,
-    },
-    { name: 'account_code', label: 'Account Code', required: true, sm: 6 },
-    { name: 'account_name', label: 'Account Name', required: true, sm: 6 },
-    {
-      name: 'is_transaction_account',
-      label: 'Is Transaction Account',
-      type: 'checkbox',
-      sm: 6,
-    },
-  ];
-
-  const viewFields = [
-    { name: 'nature', label: 'Nature' },
-    { 
-      name: 'parent_id', 
-      label: 'Parent Account', 
-      render: (value) => {
-         let parent = typeof value === 'object' && value !== null ? value : chartsData.find(a => a.id === value);
-         return parent ? `${parent.account_code} - ${parent.account_name}` : '-';
-      }
-    },
-    { name: 'account_code', label: 'Account Code' },
-    { name: 'account_name', label: 'Account Name' },
-    { name: 'is_transaction_account', label: 'Is Transaction Account', render: (value) => value ? 'Yes' : 'No' },
+    { name: 'name', label: 'Name', required: true, sm: 6 },
+    { name: 'details', label: 'Details', multiline: true, rows: 2, sm: 6 },
+    { name: 'active', label: 'Active', type: 'checkbox', sm: 6 },
   ];
 
   const columns = [
     { id: 'id', label: 'ID' },
-    { id: 'nature', label: 'Nature' },
     { 
-      id: 'parent_id', 
-      label: 'Parent Account',
-      format: (value, row) => {
-        let parent = typeof value === 'object' && value !== null ? value : chartsData.find(a => a.id === value);
-        return parent ? `${parent.account_code || '-'} - ${parent.account_name || '-'}` : '-';
+      id: 'warehouse_id', 
+      label: 'Warehouse',
+      format: (value) => {
+        const warehouse = warehousesData.find(w => w.id === value);
+        return warehouse ? warehouse.name : '-';
       }
     },
-    { id: 'account_code', label: 'Account Code' },
-    { id: 'account_name', label: 'Account Name' },
+    { id: 'name', label: 'Name' },
+    { id: 'details', label: 'Details' },
     {
-      id: 'is_transaction_account',
-      label: 'Is Transaction Account',
+      id: 'active',
+      label: 'Active',
       format: (value) => (value ? 'Yes' : 'No'),
     },
+  ];
+
+  const viewFields = [
+    { 
+      name: 'warehouse_id', 
+      label: 'Warehouse', 
+      render: (value) => {
+         const warehouse = warehousesData.find(w => w.id === value);
+         return warehouse ? warehouse.name : '-';
+      } 
+    },
+    { name: 'name', label: 'Name' },
+    { name: 'details', label: 'Details' },
+    { name: 'active', label: 'Active', render: (data) => data ? 'Yes' : 'No' },
   ];
 
   const handleChangePage = (event, newPage) => {
@@ -120,18 +100,17 @@ const ChartsOfAccounts = () => {
     setPage(0);
   };
 
-  const handleOpenModal = (mode, account = null) => {
+  const handleOpenModal = (mode, location = null) => {
     setModalMode(mode);
-    setSelectedAccount(account);
-    if (account) {
-      setFormData(account);
+    setSelectedLocation(location);
+    if (location) {
+      setFormData(location);
     } else {
       setFormData({
-        nature: '',
-        parent_id: '',
-        account_code: '',
-        account_name: '',
-        is_transaction_account: false,
+        warehouse_id: '',
+        name: '',
+        details: '',
+        active: true,
       });
     }
     setModalOpen(true);
@@ -139,36 +118,34 @@ const ChartsOfAccounts = () => {
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    setSelectedAccount(null);
+    setSelectedLocation(null);
   };
 
   const handleFormChange = (e) => {
     if (e.reset) {
       setFormData({
-        nature: '',
-        parent_id: '',
-        account_code: '',
-        account_name: '',
-        is_transaction_account: false,
+        warehouse_id: '',
+        name: '',
+        details: '',
+        active: true,
       });
     } else {
-      const { name, type, value, checked } = e.target;
+      const { name, value, checked } = e.target;
       setFormData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value,
+        [name]: name === 'active' ? checked : value,
       }));
     }
   };
 
   const handleSubmit = async () => {
     try {
-      const { id, ...payload } = formData;  // remove id from payload
       if (modalMode === 'add') {
-        await addChartOfAccount(payload).unwrap();
-        toast.success('Chart of Account created successfully');
+        await addLocation(formData).unwrap();
+        toast.success('Location created successfully');
       } else {
-        await updateChartOfAccount({ id: selectedAccount.id, ...payload }).unwrap();
-        toast.success('Chart of Account updated successfully');
+        await updateLocation({ id: selectedLocation.id, ...formData }).unwrap();
+        toast.success('Location updated successfully');
       }
       await refetch();
       handleCloseModal();
@@ -184,8 +161,8 @@ const ChartsOfAccounts = () => {
 
   const confirmDelete = async () => {
     try {
-      await deleteChartOfAccount(itemToDelete.id).unwrap();
-      toast.success('Chart of Account deleted successfully');
+      await deleteLocation(itemToDelete.id).unwrap();
+      toast.success('Location deleted successfully');
       await refetch();
     } catch (error) {
       toast.error(error.data?.message || 'Delete failed');
@@ -195,28 +172,30 @@ const ChartsOfAccounts = () => {
     }
   };
 
-  if (isLoading) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-      <CircularProgress />
-    </Box>
-  );
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (isError) return <Typography color="error">Error: {error.data?.message || 'Failed to load data'}</Typography>;
 
   return (
     <Box>
       {viewItem ? (
         <>
-          <ViewDetails data={viewItem} title={`Chart of Account Details - ID ${viewItem.id}`} fields={viewFields} />
+          <ViewDetails data={viewItem} title={`Location Details - ID ${viewItem.id}`} fields={viewFields} />
           <Box sx={{ mt: 2 }}>
             <Button variant="outlined" onClick={() => setViewItem(null)}>
-              Back to Chart List
+              Back to Location List
             </Button>
           </Box>
         </>
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h4">Charts of Accounts</Typography>
+            <Typography variant="h4">Locations</Typography>
             <Button
               variant="contained"
               startIcon={<PlusOutlined />}
@@ -227,31 +206,35 @@ const ChartsOfAccounts = () => {
           </Box>
           <SharedTable
             columns={columns}
-            data={chartsData}
-            onView={(account) => setViewItem(account)}
-            onEdit={(account) => {
+            data={locationsData}
+            onView={(location) => setViewItem(location)}
+            onEdit={(location) => {
               tableRef.current = null;
-              handleOpenModal('edit', account);
+              handleOpenModal('edit', location);
             }}
             onDelete={handleDelete}
             page={page}
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={chartsData.length}
+            totalRows={locationsData.length}
             tableRef={tableRef}
           />
           <SharedModal
             open={modalOpen}
             onClose={handleCloseModal}
-            title={modalMode === 'add' ? 'Charts of Accounts, Add new' : 'Edit Chart of Account'}
+            title={
+              modalMode === 'add'
+                ? 'Locations, Add new'
+                : 'Edit Location'
+            }
             formData={formData}
             onChange={handleFormChange}
             onSubmit={handleSubmit}
             mode={modalMode}
             fields={fields}
           />
-          {/* Delete confirmation dialog remains unchanged */}
+          {/* Delete confirmation dialog */}
           {deleteConfirmOpen && (
             <Box sx={{
               position: 'fixed',
@@ -276,7 +259,7 @@ const ChartsOfAccounts = () => {
                   Confirm Delete
                 </Typography>
                 <Typography sx={{ mb: 3 }}>
-                  Are you sure you want to delete "{itemToDelete?.account_name}"?
+                  Are you sure you want to delete "{itemToDelete?.name}"?
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                   <Button variant="outlined" onClick={() => setDeleteConfirmOpen(false)}>
@@ -295,4 +278,4 @@ const ChartsOfAccounts = () => {
   );
 };
 
-export default ChartsOfAccounts;
+export default Locations;

@@ -1,4 +1,4 @@
-import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography, CircularProgress } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Avatar from '@mui/material/Avatar';
 import Stack from '@mui/material/Stack';
@@ -14,7 +14,11 @@ export default function DashboardDefault() {
   const { data, error, isLoading } = useGetDashboardDataQuery();
 
   if (isLoading) {
-    return <Typography>Loading dashboard...</Typography>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error || !data) {

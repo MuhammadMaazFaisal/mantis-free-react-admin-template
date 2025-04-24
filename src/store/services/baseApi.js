@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const commonBaseQuery = (basePath) => fetchBaseQuery({
-  baseUrl: `http://test-agar-global.test/api/${basePath}`,
+  baseUrl: `https://app.agarglobal.co/public/api/${basePath}`,
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
     if (token) {

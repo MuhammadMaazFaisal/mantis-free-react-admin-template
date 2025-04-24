@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, CircularProgress } from '@mui/material';
 import SharedTable from '../../components/SharedTable';
 import { useGetTrialBalanceReportQuery } from '../../store/services/reportService';
 
@@ -18,7 +18,11 @@ const TrialBalanceReport = () => {
     setPage(0);
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <CircularProgress />
+    </Box>
+  );
   if (error) return <div>Error loading report</div>;
 
   return (

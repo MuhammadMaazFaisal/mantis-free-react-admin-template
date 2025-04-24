@@ -257,14 +257,14 @@ const Product = () => {
                         >
                             Edit Product
                         </Button>
-                        <Button 
+                        {/* <Button 
                             variant="contained" 
                             color="error"
                             startIcon={<DeleteOutlined />}
                             onClick={() => handleDeleteClick(selectedProduct)}
                         >
                             Delete
-                        </Button>
+                        </Button> */}
                     </Box>
                 </>
             ) : (
