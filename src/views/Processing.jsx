@@ -41,13 +41,14 @@ const Processing = () => {
   // Transform API data to match the expected format
   const transformProcessingData = (apiResponse) => {
     if (!apiResponse) return [];
-    // Use apiResponse.data if present, otherwise use apiResponse directly.
     const dataArr = apiResponse.data ? apiResponse.data : apiResponse;
     console.log('Transformed Processing Data:', dataArr); // Debugging line
     return dataArr.map(item => ({
       id: item.id,
       date: item.date,
-      party_id: item.party_id,
+      // Use nested party object if available
+      party_id: item.party ? item.party.id : item.party_id,
+      partyName: item.party ? item.party.name : '',
       description: item.description,
       charges_total: item.charges_total,
       active: item.active == 1, // convert numeric flag to boolean
@@ -88,14 +89,8 @@ const Processing = () => {
   const columns = [
     { id: 'id', label: 'ID' },
     { id: 'date', label: 'Date' },
-    {
-      id: 'party_id',
-      label: 'Party',
-      format: (value) => {
-        const party = partyOptions.find((opt) => opt.value == value);
-        return party ? party.label : value;
-      }
-    },
+    // Updated Party column to use partyName instead of party_id and remove formatting function
+    { id: 'partyName', label: 'Party' },
     { id: 'description', label: 'Description' },
     { id: 'charges_total', label: 'Charges Total (₹)' },
     {

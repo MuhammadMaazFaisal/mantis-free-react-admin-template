@@ -59,6 +59,12 @@ const Product = () => {
 
     // Get products array safely from response
     const products = productsResponse || [];
+    // Transform products for table rendering to avoid rendering objects as children
+    const transformedProducts = products.map(p => ({
+        ...p,
+        product_group: p.product_group?.name || '',
+        unit: p.unit?.name || ''
+    }));
 
     const fields = [
         { name: 'itemNo', label: 'Item No', required: true, sm: 6 },
@@ -84,6 +90,8 @@ const Product = () => {
     const columns = [
         { id: 'id', label: 'ID' },
         { id: 'name', label: 'Product Name' },
+        { id: 'product_group', label: 'Product Group', format: (value) => value?.name || '' },
+        { id: 'unit', label: 'Unit', format: (value) => value?.name || '' },
         { id: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
         { id: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
     ];
@@ -91,6 +99,8 @@ const Product = () => {
     const viewFields = [
         { name: 'id', label: 'ID' },
         { name: 'name', label: 'Product Name' },
+        { name: 'product_group', label: 'Product Group', format: (value) => value?.name || '' },
+        { name: 'unit', label: 'Unit', format: (value) => value?.name || '' },
         { name: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
         { name: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
     ];
@@ -271,7 +281,7 @@ const Product = () => {
                     </Box>
                     <SharedTable
                         columns={columns}
-                        data={products}
+                        data={transformedProducts}
                         onEdit={(product) => handleOpenModal('edit', product)}
                         onView={(product) => handleOpenModal('view', product)}
                         page={page}

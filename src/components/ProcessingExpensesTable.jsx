@@ -102,7 +102,7 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
               safeDetails.map((detail, index) => (
                 <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.charges_type_id || '-'}
+                    {detail.charges_type.name || '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.details || '-'}
