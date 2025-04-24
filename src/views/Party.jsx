@@ -1,19 +1,31 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box } from '@mui/material';
-import { PlusOutlined } from '@ant-design/icons';
+import { Typography, Button, Box, Alert, Snackbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useGetPartiesQuery, useAddPartyMutation, useUpdatePartyMutation, useDeletePartyMutation } from '../store/services/party';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from 'store/slices/authSlice';
 
 const Party = () => {
   const navigate = useNavigate();
-  const { data: parties, isLoading, error, isError } = useGetPartiesQuery();
-  const [addParty, { isLoading: isAdding, error: addError }] = useAddPartyMutation();
-  const [updateParty, { isLoading: isUpdating, error: updateError }] = useUpdatePartyMutation();
-  const [deleteParty, { isLoading: isDeleting, error: deleteError }] = useDeletePartyMutation();
-  console.log('Parties:', parties);
+  const location = useLocation();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } });
+    }
+  }, [isAuthenticated, navigate, location]);
+
+  const { data: parties, isLoading, isError, error, refetch } = useGetPartiesQuery();
+  const [addParty, { isLoading: isAdding }] = useAddPartyMutation();
+  const [updateParty, { isLoading: isUpdating }] = useUpdatePartyMutation();
+  const [deleteParty, { isLoading: isDeleting }] = useDeletePartyMutation();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
   const [selectedParty, setSelectedParty] = useState(null);
@@ -28,6 +40,17 @@ const Party = () => {
     active: true,
   });
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    id: null,
+  });
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
@@ -35,21 +58,35 @@ const Party = () => {
   const detailsRef = useRef();
 
   const fields = [
-    { id: 'name', label: 'Party Name', required: true },
-    { id: 'address', label: 'Address', multiline: true, rows: 2 },
-    { id: 'contact_number', label: 'Contact Number', sm: 6 },
-    { id: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
-    { id: 'opening_balance_date', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
-    { id: 'opening_balance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
-    { id: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
-    { id: 'active', label: 'Is Active', type: 'checkbox', format: (value) => value === 1 },
+    { name: 'name', label: 'Party Name', required: true, sm: 6 },
+    { name: 'address', label: 'Address', multiline: true, rows: 2, sm: 12 },
+    { name: 'contact_number', label: 'Contact Number', sm: 6 },
+    { name: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
+    { name: 'opening_balance_date', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
+    { name: 'opening_balance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'remarks', label: 'Remarks', multiline: true, rows: 2, sm: 12 },
+    { name: 'active', label: 'Is Active', type: 'checkbox', sm: 12 },
   ];
 
-  // Transform API data to match table expectations
-  const transformedParties = parties?.map(party => ({
-    ...party,
-    active: party.active === 1 // Convert to boolean for checkbox
-  })) || [];
+  const columns = [
+    { id: 'id', label: 'ID' },
+    { id: 'name', label: 'Party Name' },
+    { id: 'contact_number', label: 'Contact Number' },
+    { id: 'discount', label: 'Discount (%)' },
+    { id: 'active', label: 'Status', format: (value) => value ? 'Active' : 'Inactive' },
+  ];
+
+  const viewFields = [
+    { name: 'id', label: 'ID' },
+    { name: 'name', label: 'Party Name' },
+    { name: 'address', label: 'Address' },
+    { name: 'contact_number', label: 'Contact Number' },
+    { name: 'discount', label: 'Discount (%)' },
+    { name: 'opening_balance', label: 'Opening Balance' },
+    { name: 'active', label: 'Status', format: (value) => value ? 'Active' : 'Inactive' },
+    { name: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
+    { name: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
+  ];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -92,66 +129,80 @@ const Party = () => {
   };
 
   const handleFormChange = (e) => {
-    if (e.reset) {
-      setFormData({
-        name: '',
-        address: '',
-        contact_number: '',
-        discount: 0.0,
-        opening_balance_date: '',
-        opening_balance: 0.0,
-        remarks: '',
-        active: true,
-      });
-    } else {
-      const { name, value, type, checked } = e.target;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value,
-      }));
-    }
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
-  const handleSubmit = async (data) => {
+  const handleSubmit = async () => {
     try {
-      // Prepare data for API
-      const apiData = {
-        ...data,
-        active: data.active ? 1 : 0 // Convert boolean back to 1/0 for API
+      const payload = {
+        ...formData,
+        opening_balance: parseFloat(formData.opening_balance),
+        discount: parseFloat(formData.discount),
       };
 
       if (modalMode === 'add') {
-        await addParty(apiData).unwrap();
-        console.log('Party added successfully');
+        await addParty(payload).unwrap();
+        setSnackbar({
+          open: true,
+          message: 'Party added successfully',
+          severity: 'success',
+        });
       } else if (modalMode === 'edit') {
-        await updateParty({ ...apiData, id: selectedParty.id }).unwrap();
-        console.log('Party updated successfully');
+        await updateParty({ ...payload, id: selectedParty.id }).unwrap();
+        setSnackbar({
+          open: true,
+          message: 'Party updated successfully',
+          severity: 'success',
+        });
       }
       handleCloseModal();
+      refetch();
     } catch (err) {
-      console.error('Submit error:', err);
-      alert(`Error: ${err.data?.message || 'Failed to save party'}`);
+      setSnackbar({
+        open: true,
+        message: `Error: ${err.data?.message || 'Failed to save party'}`,
+        severity: 'error',
+      });
     }
   };
 
-  const handleDelete = async (party) => {
-    if (window.confirm(`Are you sure you want to delete "${party.name}"?`)) {
-      try {
-        await deleteParty(party.id).unwrap();
-        console.log('Party deleted successfully');
-      } catch (err) {
-        console.error('Delete error:', err);
-        alert(`Error: ${err.data?.message || 'Failed to delete party'}`);
-      }
+  const handleDeleteClick = (party) => {
+    setDeleteDialog({
+      open: true,
+      id: party.id,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteParty(deleteDialog.id).unwrap();
+      setSnackbar({
+        open: true,
+        message: 'Party deleted successfully',
+        severity: 'success',
+      });
+      setDeleteDialog({ open: false, id: null });
+      refetch();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Error: ${err.data?.message || 'Failed to delete party'}`,
+        severity: 'error',
+      });
+      setDeleteDialog({ open: false, id: null });
     }
   };
 
-  if (isError) {
-    console.error('API error:', error);
-    return <Typography color="error">Error loading parties: {error.data?.message || error.message || 'Unknown error'}</Typography>;
-  }
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
-  if (isLoading) return <Typography>Loading...</Typography>;
+  if (isLoading) return <Typography>Loading parties...</Typography>;
+  if (isError) return <Alert severity="error">Error: {error?.data?.message || 'Failed to load parties'}</Alert>;
 
   return (
     <Box>
@@ -161,18 +212,33 @@ const Party = () => {
             data={selectedParty}
             title={`Party Details - ${selectedParty.name}`}
             detailsRef={detailsRef}
-            fields={fields}
+            fields={viewFields}
           />
-          <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" onClick={() => navigate('/parties')}>
+          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+            <Button variant="outlined" onClick={() => navigate('/party')}>
               Back to Party List
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => handleOpenModal('edit', selectedParty)}
+            >
+              Edit Party
+            </Button>
+            <Button 
+              variant="contained" 
+              color="error"
+              startIcon={<DeleteOutlined />}
+              onClick={() => handleDeleteClick(selectedParty)}
+            >
+              Delete
             </Button>
           </Box>
         </>
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h4">Party Management</Typography>
+            <Typography variant="h4">Parties</Typography>
             <Button
               variant="contained"
               startIcon={<PlusOutlined />}
@@ -182,21 +248,21 @@ const Party = () => {
             </Button>
           </Box>
           <SharedTable
-            columns={fields}
-            data={transformedParties}
-            isLoading={isLoading}
+            columns={columns}
+            data={parties || []}
             onEdit={(party) => handleOpenModal('edit', party)}
             onView={(party) => handleOpenModal('view', party)}
-            onDelete={handleDelete}
             page={page}
             rowsPerPage={rowsPerPage}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            totalRows={transformedParties?.length || 0}
+            totalRows={parties?.length || 0}
             tableRef={tableRef}
           />
         </>
       )}
+      
+      {/* Form Modal */}
       <SharedModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -204,17 +270,54 @@ const Party = () => {
           modalMode === 'add'
             ? 'Add New Party'
             : modalMode === 'edit'
-            ? 'Edit Party Details'
-            : 'View Party Details'
+              ? 'Edit Party Details'
+              : 'View Party Details'
         }
         formData={formData}
         onChange={handleFormChange}
         onSubmit={handleSubmit}
         mode={modalMode}
         fields={fields}
-        isLoading={isAdding || isUpdating}
-        error={addError || updateError}
       />
+      
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+      >
+        <DialogTitle>Delete Party</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this party? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })}>Cancel</Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

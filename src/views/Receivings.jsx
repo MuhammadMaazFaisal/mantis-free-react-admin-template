@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { useGetReceivingsQuery, useAddReceivingMutation, useUpdateReceivingMutation } from '../store/services/receivings';
+import { useGetPartiesQuery } from '../store/services/party';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
@@ -11,8 +12,11 @@ import { useNavigate } from 'react-router-dom';
 const Receivings = () => {
   const navigate = useNavigate();
   const { data: receivings, isLoading } = useGetReceivingsQuery();
+  const { data: parties } = useGetPartiesQuery();
   const [addReceiving] = useAddReceivingMutation();
   const [updateReceiving] = useUpdateReceivingMutation();
+
+  const partyOptions = parties ? parties.map(p => ({ value: p.id, label: p.name })) : [];
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
@@ -20,7 +24,7 @@ const Receivings = () => {
   const [formData, setFormData] = useState({
     lot_number: '',
     arrival_date: '',
-    party: '',
+    party_id: '', // updated property name
     receiving_type: '',
     file_number: '',
     remarks: '',
@@ -41,14 +45,10 @@ const Receivings = () => {
     { name: 'lot_number', label: 'Lot Number', required: true, sm: 6 },
     { name: 'arrival_date', label: 'Arrival Date', type: 'date', required: true, sm: 6 },
     {
-      name: 'party',
+      name: 'party_id', // updated property name
       label: 'Party',
       type: 'select',
-      options: [
-        { value: '', label: 'Please select' },
-        { value: 'SA Rice', label: 'SA Rice' },
-        { value: 'All Commodities', label: 'All Commodities' },
-      ],
+      options: partyOptions, // dynamic dropdown options now
       required: true,
       sm: 6,
     },
@@ -59,6 +59,7 @@ const Receivings = () => {
       options: [
         { value: '', label: 'Please select' },
         { value: 'Milling', label: 'Milling' },
+        { value: 'Purchase', label: 'Purchase' }, // added Purchase option
       ],
       required: true,
       sm: 6,
@@ -74,7 +75,8 @@ const Receivings = () => {
   const formatReceivingData = (receiving) => {
     return {
       ...receiving,
-      party: receiving.party?.name || '',
+      // if full party info exists, use its name; otherwise fallback to party_id value
+      party: receiving.party?.name || receiving.party_id || '',
       active: receiving.active === 1 || receiving.active === true,
     };
   };
@@ -147,12 +149,15 @@ const Receivings = () => {
     setModalMode(mode);
     setSelectedReceiving(receiving);
     if (receiving) {
-      setFormData(formatReceivingData(receiving));
+      setFormData({
+        ...formatReceivingData(receiving),
+        party_id: receiving.party?.id || receiving.party_id || ''
+      });
     } else {
       setFormData({
         lot_number: '',
         arrival_date: '',
-        party: '',
+        party_id: '', // reset to empty for dynamic dropdown
         receiving_type: '',
         file_number: '',
         remarks: '',
@@ -181,7 +186,7 @@ const Receivings = () => {
       setFormData({
         lot_number: '',
         arrival_date: '',
-        party: '',
+        party_id: '', // reset to empty for dynamic dropdown
         receiving_type: '',
         file_number: '',
         remarks: '',
@@ -203,10 +208,25 @@ const Receivings = () => {
   };
 
   const handleSubmit = () => {
+    // Transform details to use "product_id" field as required by the API
+    const transformedDetails = formData.details.map(detail => ({
+      product_id: detail.product,
+      quantity: detail.quantity,
+      weight: detail.weight,
+      rate: detail.rate,
+      amount: detail.amount,
+    }));
+
+    if (transformedDetails.length === 0) {
+      alert("Please provide at least one detail entry.");
+      return;
+    }
+
     const formattedData = {
       ...formData,
       active: formData.active ? 1 : 0,
-      party_id: typeof formData.party === 'object' ? formData.party.id : null
+      party_id: typeof formData.party_id === 'object' ? formData.party_id.id : formData.party_id || null,
+      details: transformedDetails,
     };
 
     if (modalMode === 'add') {

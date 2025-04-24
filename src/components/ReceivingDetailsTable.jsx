@@ -10,10 +10,15 @@ import {
   IconButton,
   TextField,
   Box,
+  MenuItem,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useGetProductsQuery } from '../store/services/product';
 
 const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
+  const { data: products } = useGetProductsQuery();
+  const productOptions = products ? products.map(p => ({ value: p.id, label: p.name })) : [];
+
   const [newDetail, setNewDetail] = useState({
     product: '',
     quantity: 0,
@@ -50,9 +55,9 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
   };
 
   const getProductName = (product) => {
-    if (!product) return '';
-    if (typeof product === 'string') return product;
-    return product.name || '';
+    if (product && typeof product === 'object') return product.name || '';
+    const found = productOptions.find(option => option.value === product);
+    return found ? found.label : '';
   };
 
   return (
@@ -115,13 +120,20 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
         <Box sx={{ p: 2, borderTop: '1px solid #e8ecef' }}>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <TextField
+              select
               label="Product"
               name="product"
               value={newDetail.product}
               onChange={handleNewDetailChange}
               size="small"
               sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
-            />
+            >
+              {productOptions.map(option => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Quantity"
               name="quantity"
