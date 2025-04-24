@@ -127,6 +127,9 @@ const Party = () => {
     setModalOpen(false);
     setSelectedParty(null);
     if (modalMode === 'view') {
+      navigate('/party');
+    }
+  };
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -261,25 +264,25 @@ const Party = () => {
           />
         </>
       )}
-      
-      {/* Form Modal */}
-      <SharedModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Add New Party'
-            : modalMode === 'edit'
-              ? 'Edit Party Details'
-              : 'View Party Details'
-        }
-        formData={formData}
-        onChange={handleFormChange}
-        onSubmit={handleSubmit}
-        mode={modalMode}
-        fields={fields}
-      />
-      
+
+      {/* Render the form modal only for add and edit modes */}
+      {modalMode !== 'view' && (
+        <SharedModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          title={
+            modalMode === 'add'
+              ? 'Add New Party'
+              : 'Edit Party Details'
+          }
+          formData={formData}
+          onChange={handleFormChange}
+          onSubmit={handleSubmit}
+          mode={modalMode}
+          fields={fields}
+        />
+      )}
+
       {/* Snackbar for notifications */}
       <Snackbar 
         open={snackbar.open} 
