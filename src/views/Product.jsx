@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Typography, Button, Box, Alert, Snackbar, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Typography, Button, Box, Alert, Snackbar, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useGetProductsQuery, useAddProductMutation, useUpdateProductMutation, useDeleteProductMutation } from '../store/services/product';
 import { useProductGroupsQuery, useUnitsQuery } from 'store/services/settings';
@@ -117,8 +117,17 @@ const Product = () => {
     const handleOpenModal = (mode, product = null) => {
         setModalMode(mode);
         setSelectedProduct(product);
-        
-        if (product) {
+
+        if (mode === 'add') {
+            // Compute highest product id and prefill itemNo
+            const highestId = products.reduce((max, p) => p.id > max ? p.id : max, 0);
+            setFormData({
+                itemNo: highestId + 1,
+                productName: '',
+                product_group_id: '',
+                unit_id: '',
+            });
+        } else if (product) {
             // Extract itemNo and productName from the name field
             const nameParts = product.name.split(' - ');
             const itemNo = nameParts[0] || '';
@@ -230,7 +239,13 @@ const Product = () => {
         setSnackbar({ ...snackbar, open: false });
     };
 
-    if (isLoading) return <Typography>Loading products...</Typography>;
+     if (isLoading) {
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        );
+      }
     if (isError) return <Alert severity="error">Error: {error?.data?.message || 'Failed to load products'}</Alert>;
 
     return (
