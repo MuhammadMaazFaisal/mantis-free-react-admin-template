@@ -333,7 +333,12 @@ const SharedTable = ({
                           color: '#334155',
                         }}
                       >
-                        {column.render ? column.render(row) : row[column.id]}
+                        {column.render
+                          ? column.render(row[column.id], row)
+                          : (column.format
+                              ? column.format(row[column.id], row)
+                              : row[column.id]
+                            )}
                       </TableCell>
                     ))}
                     {showActions && (

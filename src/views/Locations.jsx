@@ -61,12 +61,9 @@ const Locations = () => {
   const columns = [
     { id: 'id', label: 'ID' },
     { 
-      id: 'warehouse_id', 
+      id: 'warehouse', 
       label: 'Warehouse',
-      format: (value) => {
-        const warehouse = warehousesData.find(w => w.id === value);
-        return warehouse ? warehouse.name : '-';
-      }
+      format: (warehouse) => warehouse?.name || '-'
     },
     { id: 'name', label: 'Name' },
     { id: 'details', label: 'Details' },
@@ -79,12 +76,9 @@ const Locations = () => {
 
   const viewFields = [
     { 
-      name: 'warehouse_id', 
+      name: 'warehouse', 
       label: 'Warehouse', 
-      render: (value) => {
-         const warehouse = warehousesData.find(w => w.id === value);
-         return warehouse ? warehouse.name : '-';
-      } 
+      render: (warehouse) => warehouse?.name || '-'
     },
     { name: 'name', label: 'Name' },
     { name: 'details', label: 'Details' },
