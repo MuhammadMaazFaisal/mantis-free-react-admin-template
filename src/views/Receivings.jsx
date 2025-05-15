@@ -3,6 +3,7 @@ import { Typography, Button, Box, CircularProgress } from '@mui/material';
 import { PlusOutlined } from '@ant-design/icons';
 import { useGetReceivingsQuery, useAddReceivingMutation, useUpdateReceivingMutation } from '../store/services/receivings';
 import { useGetPartiesQuery } from '../store/services/party';
+import { useLocationsQuery } from '../store/services/settings';
 import SharedTable from '../components/SharedTable';
 import SharedModal from '../components/SharedModal';
 import ViewDetails from '../components/ViewDetails';
@@ -13,9 +14,11 @@ const Receivings = () => {
   const navigate = useNavigate();
   const { data: receivings, isLoading } = useGetReceivingsQuery();
   const { data: parties } = useGetPartiesQuery();
+  const { data: locations } = useLocationsQuery();
   const [addReceiving] = useAddReceivingMutation();
   const [updateReceiving] = useUpdateReceivingMutation();
 
+  const locationOptions = locations ? locations.map(l => ({ value: l.id, label: l.name })) : [];
   const partyOptions = parties ? parties.map(p => ({ value: p.id, label: p.name })) : [];
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -70,49 +73,7 @@ const Receivings = () => {
     { name: 'discount_percent', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
     { name: 'grand_total', label: 'Grand Total (₹)', type: 'number', required: true, sm: 6 },
     { name: 'active', label: 'Is Active', type: 'checkbox' },
-  ];
-
-  const formatReceivingData = (receiving) => {
-    return {
-      ...receiving,
-      // if full party info exists, use its name; otherwise fallback to party_id value
-      party: receiving.party?.name || receiving.party_id || '',
-      active: receiving.active === 1 || receiving.active === true,
-    };
-  };
-
-  const columns = [
-    { id: 'id', label: 'ID' },
-    {
-      id: 'arrival_date',
-      label: 'Arrival Date',
-      format: (value) => new Date(value).toLocaleDateString()
-    },
-    { id: 'party', label: 'Party' },
-    { id: 'receiving_type', label: 'Receiving Type' },
-    { id: 'lot_number', label: 'Lot #' },
-    { id: 'file_number', label: 'File #' },
-    { id: 'remarks', label: 'Remarks' },
-    {
-      id: 'total',
-      label: 'Total (₹)',
-      format: (value) => parseFloat(value).toFixed(2)
-    },
-    {
-      id: 'discount_percent',
-      label: 'Discount (%)',
-      format: (value) => parseFloat(value).toFixed(2)
-    },
-    {
-      id: 'grand_total',
-      label: 'Grand Total (₹)',
-      format: (value) => parseFloat(value).toFixed(2)
-    },
-    {
-      id: 'active',
-      label: 'Is Active',
-      format: (value) => (value ? 'Yes' : 'No'),
-    },
+    // Removed the main location field.
   ];
 
   const viewFields = [
@@ -124,6 +85,7 @@ const Receivings = () => {
     { name: 'modified_by', label: 'Modified By' },
     { name: 'modified_on', label: 'Modified On' },
     { name: 'status', label: 'Status' },
+    // Removed location view field.
   ];
 
   const subTableConfig = {
@@ -145,13 +107,24 @@ const Receivings = () => {
     setPage(0);
   };
 
+  const formatReceivingData = (receiving) => {
+    return {
+      ...receiving,
+      // if full party info exists, use its name; otherwise fallback to party_id value
+      party: receiving.party?.name || receiving.party_id || '',
+      active: receiving.active === 1 || receiving.active === true,
+      // Removed location formatting from top-level.
+    };
+  };
+
   const handleOpenModal = (mode, receiving = null) => {
     setModalMode(mode);
     setSelectedReceiving(receiving);
     if (receiving) {
       setFormData({
         ...formatReceivingData(receiving),
-        party_id: receiving.party?.id || receiving.party_id || ''
+        party_id: receiving.party?.id || receiving.party_id || '',
+        // Removed setting location from formData.
       });
     } else {
       setFormData({
@@ -206,9 +179,10 @@ const Receivings = () => {
   };
 
   const handleSubmit = () => {
-    // Transform details to use "product_id" field as required by the API
+    // Transform details to use "product_id" and "location_id" as required by the API
     const transformedDetails = formData.details.map(detail => ({
       product_id: detail.product,
+      location_id: typeof detail.location === 'object' ? detail.location.id : detail.location || null,
       quantity: detail.quantity,
       weight: detail.weight,
       rate: detail.rate,
@@ -240,6 +214,8 @@ const Receivings = () => {
       details={(data || formData)?.details || []}
       onChange={(updatedDetails) => onChange(updatedDetails)}
       isViewMode={isViewMode}
+      // Pass location options for the dropdown beside the product dropdown.
+      locationOptions={locationOptions}
     />
   );
 
@@ -277,8 +253,41 @@ const Receivings = () => {
             </Button>
           </Box>
           <SharedTable
-            columns={columns}
-            data={receivings?.map(formatReceivingData) || []}
+            columns={[
+              { id: 'id', label: 'ID' },
+              {
+                id: 'arrival_date',
+                label: 'Arrival Date',
+                format: (value) => new Date(value).toLocaleDateString()
+              },
+              { id: 'party', label: 'Party' },
+              { id: 'receiving_type', label: 'Receiving Type' },
+              { id: 'lot_number', label: 'Lot #' },
+              { id: 'file_number', label: 'File #' },
+              { id: 'remarks', label: 'Remarks' },
+              {
+                id: 'total',
+                label: 'Total (₹)',
+                format: (value) => parseFloat(value).toFixed(2)
+              },
+              {
+                id: 'discount_percent',
+                label: 'Discount (%)',
+                format: (value) => parseFloat(value).toFixed(2)
+              },
+              {
+                id: 'grand_total',
+                label: 'Grand Total (₹)',
+                format: (value) => parseFloat(value).toFixed(2)
+              },
+              {
+                id: 'active',
+                label: 'Is Active',
+                format: (value) => (value ? 'Yes' : 'No'),
+              },
+              // Removed main location column.
+            ]}
+            data={(receivings?.map(formatReceivingData)) || []}
             onEdit={(receiving) => {
               tableRef.current = null;
               handleOpenModal('edit', receiving);

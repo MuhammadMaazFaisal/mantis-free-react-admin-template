@@ -15,7 +15,7 @@ import {
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useGetProductsQuery } from '../store/services/product';
 
-const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
+const ReceivingDetailsTable = ({ details, onChange, isViewMode, locationOptions = [] }) => {
   const { data: products } = useGetProductsQuery();
   const productOptions = products ? products.map(p => ({ value: p.id, label: p.name })) : [];
 
@@ -25,6 +25,7 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
     rate: 0,
     amount: 0,
     weight: 0,
+    location: '', // new field
   });
 
   const handleAddDetail = () => {
@@ -35,6 +36,7 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
       rate: 0,
       amount: 0,
       weight: 0,
+      location: '', // reset new field
     });
   };
 
@@ -60,6 +62,13 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
     return found ? found.label : '';
   };
 
+  // New helper to get the location name
+  const getLocationName = (loc) => {
+    if (loc && typeof loc === 'object') return loc.name || '';
+    const found = locationOptions.find(option => option.value === loc);
+    return found ? found.label : '';
+  };
+
   return (
     <TableContainer component={Paper} sx={{ borderRadius: '8px', border: '1px solid #e8ecef', boxShadow: 'none' }}>
       <Table sx={{ minWidth: 650, borderCollapse: 'separate', borderSpacing: 0 }}>
@@ -67,6 +76,9 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
           <TableRow sx={{ backgroundColor: '#f1f5f9', color: '#1e293b' }}>
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Product
+            </TableCell>
+            <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
+              Location
             </TableCell>
             <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
               Quantity
@@ -92,6 +104,9 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
             <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }, '&:last-child td': { borderBottom: 'none' } }}>
               <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {getProductName(detail.product)}
+              </TableCell>
+              <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
+                {getLocationName(detail.location)}
               </TableCell>
               <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', color: '#334155' }}>
                 {detail.quantity}
@@ -129,6 +144,21 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
             >
               {productOptions.map(option => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Location"
+              name="location"
+              value={newDetail.location}
+              onChange={handleNewDetailChange}
+              size="small"
+              sx={{ width: 120, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+            >
+              {locationOptions.map(option => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
