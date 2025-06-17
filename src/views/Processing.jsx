@@ -11,6 +11,7 @@ import ProcessingInTable from '../components/ProcessingInTable';
 import ProcessingExpensesTable from '../components/ProcessingExpensesTable';
 import { useNavigate } from 'react-router-dom';
 import ReactDOMServer from 'react-dom/server';
+import { toast } from 'react-toastify';
 
 const Processing = () => {
   const navigate = useNavigate();
@@ -285,6 +286,8 @@ const Processing = () => {
       refetch();
       handleCloseModal();
     } catch (err) {
+      const errMsg = err?.data?.message || err?.message || "An error occurred.";
+      toast.error(errMsg);
       console.error('Failed to save processing:', err);
     }
   };
@@ -460,12 +463,12 @@ const Processing = () => {
                                 <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
                                 <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
                                 <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
+                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_qty}</td>
                                 <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty - (item.qty_less || 0)}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
+                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
+                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_weight}</td>
                                 <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight - (item.weight_less || 0)}</td>
+                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
                                 <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
                             </tr>
                         ))}
