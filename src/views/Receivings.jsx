@@ -69,9 +69,9 @@ const Receivings = () => {
     },
     { name: 'file_number', label: 'File Number', sm: 6 },
     { name: 'remarks', label: 'Remarks', multiline: true, rows: 2 },
-    { name: 'total', label: 'Total (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'total', label: 'Total (Rs)', type: 'number', required: true, sm: 6 },
     { name: 'discount_percent', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
-    { name: 'grand_total', label: 'Grand Total (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'grand_total', label: 'Grand Total (Rs)', type: 'number', required: true, sm: 6 },
     { name: 'active', label: 'Is Active', type: 'checkbox' },
     // Removed the main location field.
   ];
@@ -267,7 +267,7 @@ const Receivings = () => {
               { id: 'remarks', label: 'Remarks' },
               {
                 id: 'total',
-                label: 'Total (₹)',
+                label: 'Total (Rs)',
                 format: (value) => parseFloat(value).toFixed(2)
               },
               {
@@ -277,7 +277,7 @@ const Receivings = () => {
               },
               {
                 id: 'grand_total',
-                label: 'Grand Total (₹)',
+                label: 'Grand Total (Rs)',
                 format: (value) => parseFloat(value).toFixed(2)
               },
               {

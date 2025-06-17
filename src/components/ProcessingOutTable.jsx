@@ -19,7 +19,7 @@ import { useGetProductsQuery } from '../store/services/product';
 import { useGetReceivingsQuery } from '../store/services/receivings';
 
 const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
-  const safeDetails = Array.isArray(details) ? details : [];
+  const [detailsState, setDetailsState] = useState(Array.isArray(details) ? details : []);
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
   const { data: products } = useGetProductsQuery();
@@ -39,8 +39,14 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
   });
   const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
 
+  useEffect(() => {
+    setDetailsState(Array.isArray(details) ? details : []);
+  }, [details]);
+
   const handleAddDetail = () => {
-    onChange([...safeDetails, newDetail]);
+    const updatedDetails = [...detailsState, newDetail];
+    setDetailsState(updatedDetails);
+    onChange(updatedDetails);
     setNewDetail({
       lot_number: '',
       date: '',
@@ -58,7 +64,8 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
   };
 
   const handleDeleteDetail = (index) => {
-    const updatedDetails = safeDetails.filter((_, i) => i !== index);
+    const updatedDetails = detailsState.filter((_, i) => i !== index);
+    setDetailsState(updatedDetails);
     onChange(updatedDetails);
   };
 
@@ -142,14 +149,14 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {safeDetails.length === 0 ? (
+            {detailsState.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={isViewMode ? 11 : 12} sx={{ textAlign: 'center', color: '#64748b' }}>
                   No raw materials available.
                 </TableCell>
               </TableRow>
             ) : (
-              safeDetails.map((detail, index) => (
+              detailsState.map((detail, index) => (
                 <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' } }}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.lot_number || '-'}

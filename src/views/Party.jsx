@@ -63,7 +63,7 @@ const Party = () => {
     { name: 'contact_number', label: 'Contact Number', sm: 6 },
     { name: 'discount', label: 'Discount (%)', type: 'number', required: true, sm: 6 },
     { name: 'opening_balance_date', label: 'Opening Balance Date', type: 'date', required: true, sm: 6 },
-    { name: 'opening_balance', label: 'Opening Balance (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'opening_balance', label: 'Opening Balance (Rs)', type: 'number', required: true, sm: 6 },
     { name: 'remarks', label: 'Remarks', multiline: true, rows: 2, sm: 12 },
     { name: 'active', label: 'Is Active', type: 'checkbox', sm: 12 },
   ];

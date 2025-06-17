@@ -116,7 +116,7 @@ const Processing = () => {
       sm: 6,
     },
     { name: 'description', label: 'Description', multiline: true, rows: 2 },
-    { name: 'charges_total', label: 'Charges Total (₹)', type: 'number', required: true, sm: 6 },
+    { name: 'charges_total', label: 'Charges Total (Rs)', type: 'number', required: true, sm: 6 },
     { name: 'active', label: 'Active', type: 'checkbox' },
   ];
 
@@ -125,7 +125,7 @@ const Processing = () => {
     { id: 'date', label: 'Date' },
     { id: 'partyName', label: 'Party' },
     { id: 'description', label: 'Description' },
-    { id: 'charges_total', label: 'Charges Total (₹)' },
+    { id: 'charges_total', label: 'Charges Total (Rs)' },
     {
       id: 'active',
       label: 'Active',

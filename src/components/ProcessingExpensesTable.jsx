@@ -14,9 +14,11 @@ import {
   Typography,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useChargesTypesQuery } from '../store/services/settings';
 
 const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
+  const { data: chargesTypes } = useChargesTypesQuery();
 
   const [newDetail, setNewDetail] = useState({
     charges_type_id: '',
@@ -102,7 +104,7 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
               safeDetails.map((detail, index) => (
                 <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.charges_type.name || '-'}
+                    {chargesTypes?.find(ct => String(ct.id) === String(detail.charges_type_id))?.name || '-'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {detail.details || '-'}
@@ -145,7 +147,11 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
-              <MenuItem value="1">Processing Charges</MenuItem>
+              {chargesTypes?.map((ct) => (
+                <MenuItem key={ct.id} value={ct.id}>
+                  {ct.name}
+                </MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Details"
