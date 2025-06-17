@@ -59,12 +59,7 @@ const Product = () => {
 
     // Get products array safely from response
     const products = productsResponse || [];
-    // Transform products for table rendering to avoid rendering objects as children
-    const transformedProducts = products.map(p => ({
-        ...p,
-        product_group: p.product_group?.name || '',
-        unit: p.unit?.name || ''
-    }));
+    const transformedProducts = products;
 
     const fields = [
         { name: 'itemNo', label: 'Item No', required: true, sm: 6 },
