@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -15,11 +15,14 @@ import {
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
+import { useGetProductsQuery } from '../store/services/product';
+import { useGetReceivingsQuery } from '../store/services/receivings';
 
 const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
+  const { data: products } = useGetProductsQuery();
 
   const [newDetail, setNewDetail] = useState({
     lot_number: '',
@@ -35,6 +38,8 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
     weight_less: 0,
     type: 'processingIn',
   });
+
+  const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
 
   const handleAddDetail = () => {
     onChange([...safeDetails, newDetail]);
@@ -71,6 +76,26 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
         : prev.amount,
     }));
   };
+
+  // Autofill newDetail when receivingsData is received and qty is 0 (i.e. not auto-filled yet)
+  useEffect(() => {
+    if (receivingsData && newDetail.lot_number && newDetail.location_id && newDetail.qty === 0) {
+      const matchingReceivings = receivingsData.filter(r => r.lot_number === newDetail.lot_number);
+      if (matchingReceivings.length > 0) {
+        const receiving = matchingReceivings[0];
+        const matchingDetail = receiving.details.find(d => String(d.location_id) === String(newDetail.location_id));
+        if (matchingDetail) {
+          setNewDetail(prev => ({
+            ...prev,
+            product_id: matchingDetail.product.id,
+            unit_id: matchingDetail.product.unit_id,
+            qty: parseFloat(matchingDetail.quantity),
+            weight: parseFloat(matchingDetail.weight),
+          }));
+        }
+      }
+    }
+  }, [receivingsData, newDetail.lot_number, newDetail.location_id, newDetail.qty]);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -228,8 +253,9 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
-              <MenuItem value="1">1121 Sella B1 Mix</MenuItem>
-              <MenuItem value="2">1121 Sella Car 2</MenuItem>
+              {products && products.map(p => (
+                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Unit"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -14,14 +14,15 @@ import {
   Typography,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-// Import dynamic data hooks
 import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
+import { useGetProductsQuery } from '../store/services/product';
+import { useGetReceivingsQuery } from '../store/services/receivings';
 
 const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
-
+  const { data: products } = useGetProductsQuery();
   const [newDetail, setNewDetail] = useState({
     lot_number: '',
     date: '',
@@ -36,6 +37,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
     weight_less: 0,
     type: 'processingOut',
   });
+  const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
 
   const handleAddDetail = () => {
     onChange([...safeDetails, newDetail]);
@@ -69,6 +71,26 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
         : parseFloat(value) || 0,
     }));
   };
+
+  // Autofill newDetail when receivingsData is received and no available_qty has been set yet
+  useEffect(() => {
+    if (receivingsData && newDetail.lot_number && newDetail.location_id && newDetail.available_qty === 0) {
+      const matchingReceivings = receivingsData.filter(r => r.lot_number === newDetail.lot_number);
+      if (matchingReceivings.length > 0) {
+        const receiving = matchingReceivings[0];
+        const matchingDetail = receiving.details.find(d => String(d.location_id) === String(newDetail.location_id));
+        if (matchingDetail) {
+          setNewDetail(prev => ({
+            ...prev,
+            product_id: matchingDetail.product.id,
+            unit_id: matchingDetail.product.unit_id,
+            available_qty: parseFloat(matchingDetail.quantity),
+            available_weight: parseFloat(matchingDetail.weight),
+          }));
+        }
+      }
+    }
+  }, [receivingsData, newDetail.lot_number, newDetail.location_id, newDetail.available_qty]);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -226,8 +248,9 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
               sx={{ width: 120 }}
             >
               <MenuItem value="">Select</MenuItem>
-              {/* Replace with dynamic product options when available */}
-              <MenuItem value="1">1121 Sella Raw</MenuItem>
+              {products && products.map(p => (
+                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+              ))}
             </TextField>
             <TextField
               label="Unit"
