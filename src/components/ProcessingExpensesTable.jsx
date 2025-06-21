@@ -30,9 +30,18 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
   // Handle change for any row
   const handleDetailChange = (index, field, value) => {
     const updated = safeDetails.map((row, i) =>
-      i === index ? { ...row, [field]: value, amount: field === 'qty' || field === 'rate'
-        ? (field === 'qty' ? value * row.rate : row.qty * value)
-        : row.amount } : row
+      i === index
+        ? {
+            ...row,
+            [field]: value,
+            amount:
+              field === 'rate' || field === 'weight'
+                ? (field === 'rate'
+                    ? value * row.weight
+                    : row.rate * value)
+                : row.rate * row.weight
+          }
+        : row
     );
     onChange(updated);
   };
