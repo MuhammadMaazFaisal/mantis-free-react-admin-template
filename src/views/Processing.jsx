@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Button, Box, CircularProgress } from '@mui/material';
+import { Typography, Button, Box, CircularProgress, Divider, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { PlusOutlined, PrinterOutlined } from '@ant-design/icons';
 import { useGetProcessingsQuery, useAddProcessingMutation, useUpdateProcessingMutation } from '../store/services/processing';
 import { useGetPartiesQuery } from '../store/services/party';
@@ -107,7 +107,7 @@ const Processing = () => {
   ];
 
   const fields = [
-    { name: 'date', label: 'Date', type: 'date', required: true, sm: 6, InputLabelProps: { shrink: true } },
+    { name: 'date', label: 'Date', type: 'date', required: true, sm: 6, InputLabelProps: { shrink: true }, helperText: 'Processing date' },
     {
       name: 'party_id',
       label: 'Party',
@@ -115,10 +115,11 @@ const Processing = () => {
       options: partyOptions,
       required: true,
       sm: 6,
+      helperText: 'Select the party for this processing'
     },
-    { name: 'description', label: 'Description', multiline: true, rows: 2 },
-    { name: 'charges_total', label: 'Charges Total (Rs)', type: 'number', required: true, sm: 6 },
-    { name: 'active', label: 'Active', type: 'checkbox' },
+    { name: 'description', label: 'Description', multiline: true, rows: 2, sm: 12, helperText: 'Describe the processing batch' },
+    { name: 'charges_total', label: 'Charges Total (Rs)', type: 'number', required: true, sm: 6, helperText: 'Total charges for this processing' },
+    { name: 'active', label: 'Active', type: 'checkbox', sm: 6, helperText: 'Is this processing active?' },
   ];
 
   const columns = [
@@ -326,11 +327,14 @@ const Processing = () => {
   };
 
   const renderCustomContent = (props) => (
-    <>
+    <Box>
+      {/* Show all sub-tables at once, separated by Divider */}
       {renderProcessingOut(props)}
+      <Divider sx={{ my: 2 }} />
       {renderProcessingIn(props)}
+      <Divider sx={{ my: 2 }} />
       {renderProcessingExpenses(props)}
-    </>
+    </Box>
   );
 
  const PrintProcessingDocument = ({ processing }) => {
@@ -783,6 +787,14 @@ const Processing = () => {
         mode={modalMode}
         fields={fields}
         renderCustomContent={renderCustomContent}
+        maxWidth="xl"
+        fullWidth
+        actions={
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, p: 2, position: 'sticky', bottom: 0, bgcolor: 'background.paper', zIndex: 1 }}>
+            <Button onClick={handleCloseModal}>Cancel</Button>
+            <Button variant="contained" onClick={handleSubmit} disabled={modalMode === 'view'}>Save</Button>
+          </Box>
+        }
       />
     </Box>
   );

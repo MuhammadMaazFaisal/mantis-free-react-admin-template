@@ -13,6 +13,11 @@ import {
   Box,
   Typography,
   Autocomplete,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
@@ -42,18 +47,39 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
 
   const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
 
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, index: null });
+
   useEffect(() => {
     setDetailsState(Array.isArray(details) ? details : []);
   }, [details]);
 
+  // Handle change for any row
+  const handleDetailChange = (index, field, value) => {
+    const updated = detailsState.map((row, i) =>
+      i === index ? { ...row, [field]: value, amount: field === 'qty' || field === 'rate'
+        ? (field === 'qty' ? value * row.rate : row.qty * value)
+        : row.amount } : row
+    );
+    setDetailsState(updated);
+    onChange(updated);
+  };
+
+  // Handle autocomplete for any row
+  const handleDetailAutocomplete = (index, field, option) => {
+    const value = option ? option.id : '';
+    handleDetailChange(index, field, value);
+  };
+
+  const handleTypeAutocomplete = (index, option) => {
+    handleDetailChange(index, 'product_type', option ? option.value : '');
+  };
+
   const handleAddDetail = () => {
-    // Add new row while keeping lot_number and date
-    const updatedDetails = [...detailsState, newDetail];
-    setDetailsState(updatedDetails);
-    onChange(updatedDetails);
-    setNewDetail(prev => ({
-      lot_number: prev.lot_number, // keep previous lot_number
-      date: prev.date,             // keep previous date
+    let prev = detailsState.length > 0 ? detailsState[detailsState.length - 1] : {};
+    const today = new Date().toISOString().slice(0, 10);
+    const newRow = {
+      lot_number: prev.lot_number || '',
+      date: prev.date || today,
       location_id: '',
       product_id: '',
       unit_id: '',
@@ -64,26 +90,20 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
       product_type: '',
       weight_less: 0,
       type: 'processingIn',
-    }));
+    };
+    setDetailsState([...detailsState, newRow]);
+    onChange([...detailsState, newRow]);
   };
 
   const handleDeleteDetail = (index) => {
-    const updatedDetails = detailsState.filter((_, i) => i !== index);
-    setDetailsState(updatedDetails);
-    onChange(updatedDetails);
+    setDeleteDialog({ open: true, index });
   };
 
-  const handleNewDetailChange = (e) => {
-    const { name, value } = e.target;
-    setNewDetail((prev) => ({
-      ...prev,
-      [name]: name === "date" || name.endsWith('_id') || name === 'lot_number' || name === 'product_type'
-        ? value
-        : parseFloat(value) || 0,
-      amount: name === 'qty' || name === 'rate'
-        ? (name === 'qty' ? value * prev.rate : prev.qty * value)
-        : prev.amount,
-    }));
+  const confirmDelete = () => {
+    const updatedDetails = detailsState.filter((_, i) => i !== deleteDialog.index);
+    setDetailsState(updatedDetails);
+    onChange(updatedDetails);
+    setDeleteDialog({ open: false, index: null });
   };
 
   // Autofill newDetail when receivingsData is received and qty is 0 (i.e. not auto-filled yet)
@@ -166,43 +186,157 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               detailsState.map((detail, index) => (
                 <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.lot_number || '-'}
+                    {isViewMode ? (detail.lot_number || '-') : (
+                      <TextField
+                        name="lot_number"
+                        value={detail.lot_number}
+                        onChange={e => handleDetailChange(index, 'lot_number', e.target.value)}
+                        size="small"
+                        sx={{ width: 100 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.date || '-'}
+                    {isViewMode ? (detail.date || '-') : (
+                      <TextField
+                        name="date"
+                        type="date"
+                        value={detail.date}
+                        onChange={e => handleDetailChange(index, 'date', e.target.value)}
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ width: 140 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {(() => {
+                    {isViewMode ? (() => {
                       const loc = locations && locations.find(l => l.id === detail.location_id);
                       return loc ? loc.name : '-';
-                    })()}
+                    })() : (
+                      <Autocomplete
+                        value={locations?.find(loc => loc.id === detail.location_id) || null}
+                        onChange={(event, newValue) => handleDetailAutocomplete(index, 'location_id', newValue)}
+                        options={locations || []}
+                        getOptionLabel={(option) => option.name}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Location" size="small" />
+                        )}
+                        sx={{ width: 120 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.product_id ? `Product ${detail.product_id}` : '-'}
+                    {isViewMode ? (detail.product_id ? `Product ${detail.product_id}` : '-') : (
+                      <Autocomplete
+                        value={products?.find(p => p.id === detail.product_id) || null}
+                        onChange={(event, newValue) => handleDetailAutocomplete(index, 'product_id', newValue)}
+                        options={products || []}
+                        getOptionLabel={(option) => option.name}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Product" size="small" />
+                        )}
+                        sx={{ width: 120 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {(() => {
+                    {isViewMode ? (() => {
                       const unit = units && units.find(u => u.id === detail.unit_id);
                       return unit ? unit.name : '-';
-                    })()}
+                    })() : (
+                      <Autocomplete
+                        value={units?.find(u => u.id === detail.unit_id) || null}
+                        onChange={(event, newValue) => handleDetailAutocomplete(index, 'unit_id', newValue)}
+                        options={units || []}
+                        getOptionLabel={(option) => option.name}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Unit" size="small" />
+                        )}
+                        sx={{ width: 100 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.qty || 0}
+                    {isViewMode ? (detail.qty || 0) : (
+                      <TextField
+                        name="qty"
+                        type="number"
+                        value={detail.qty}
+                        onChange={e => handleDetailChange(index, 'qty', parseFloat(e.target.value) || 0)}
+                        size="small"
+                        sx={{ width: 80 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.rate || 0}
+                    {isViewMode ? (detail.rate || 0) : (
+                      <TextField
+                        name="rate"
+                        type="number"
+                        value={detail.rate}
+                        onChange={e => handleDetailChange(index, 'rate', parseFloat(e.target.value) || 0)}
+                        size="small"
+                        sx={{ width: 80 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.amount || 0}
+                    {isViewMode ? (detail.amount || 0) : (
+                      <TextField
+                        name="amount"
+                        type="number"
+                        value={detail.amount}
+                        disabled
+                        size="small"
+                        sx={{ width: 100 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.weight || 0}
+                    {isViewMode ? (detail.weight || 0) : (
+                      <TextField
+                        name="weight"
+                        type="number"
+                        value={detail.weight}
+                        onChange={e => handleDetailChange(index, 'weight', parseFloat(e.target.value) || 0)}
+                        size="small"
+                        sx={{ width: 80 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.product_type || '-'}
+                    {isViewMode ? (detail.product_type || '-') : (
+                      <Autocomplete
+                        value={
+                          detail.product_type
+                            ? { label: detail.product_type, value: detail.product_type }
+                            : null
+                        }
+                        onChange={(event, newValue) => handleTypeAutocomplete(index, newValue)}
+                        options={[
+                          { label: 'Byproduct', value: 'Byproduct' },
+                          { label: 'Processed', value: 'Processed' }
+                        ]}
+                        getOptionLabel={(option) => option.label}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Type" size="small" />
+                        )}
+                        sx={{ width: 120 }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {detail.weight_less || 0}
+                    {isViewMode ? (detail.weight_less || 0) : (
+                      <TextField
+                        name="weight_less"
+                        type="number"
+                        value={detail.weight_less}
+                        onChange={e => handleDetailChange(index, 'weight_less', parseFloat(e.target.value) || 0)}
+                        size="small"
+                        sx={{ width: 80 }}
+                      />
+                    )}
                   </TableCell>
                   {!isViewMode && (
                     <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef' }}>
@@ -219,147 +353,19 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
       </TableContainer>
       {!isViewMode && (
         <Box sx={{ p: 2, borderTop: '1px solid #e8ecef' }}>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField
-              label="Lot #"
-              name="lot_number"
-              value={newDetail.lot_number}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 100 }}
-            />
-            <TextField
-              label="Date"
-              name="date"
-              type="date"
-              value={newDetail.date}
-              onChange={handleNewDetailChange}
-              size="small"
-              InputLabelProps={{ shrink: true }}
-              sx={{ width: 140 }}
-            />
-            {/* Replace Location Select */}
-            <Autocomplete
-              value={locations?.find(loc => loc.id === newDetail.location_id) || null}
-              onChange={(event, newValue) => {
-                setNewDetail(prev => ({
-                  ...prev,
-                  location_id: newValue ? newValue.id : ''
-                }));
-              }}
-              options={locations || []}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField {...params} label="Location" size="small" />
-              )}
-              sx={{ width: 120 }}
-            />
-            {/* Replace Product Select */}
-            <Autocomplete
-              value={products?.find(p => p.id === newDetail.product_id) || null}
-              onChange={(event, newValue) => {
-                setNewDetail(prev => ({
-                  ...prev,
-                  product_id: newValue ? newValue.id : ''
-                }));
-              }}
-              options={products || []}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField {...params} label="Product" size="small" />
-              )}
-              sx={{ width: 120 }}
-            />
-            {/* Replace Unit Select */}
-            <Autocomplete
-              value={units?.find(u => u.id === newDetail.unit_id) || null}
-              onChange={(event, newValue) => {
-                setNewDetail(prev => ({
-                  ...prev,
-                  unit_id: newValue ? newValue.id : ''
-                }));
-              }}
-              options={units || []}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField {...params} label="Unit" size="small" />
-              )}
-              sx={{ width: 100 }}
-            />
-            <TextField
-              label="Qty"
-              name="qty"
-              type="number"
-              value={newDetail.qty}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Rate"
-              name="rate"
-              type="number"
-              value={newDetail.rate}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Amount"
-              name="amount"
-              type="number"
-              value={newDetail.amount}
-              disabled
-              size="small"
-              sx={{ width: 100 }}
-            />
-            <TextField
-              label="Weight"
-              name="weight"
-              type="number"
-              value={newDetail.weight}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            {/* Replace Type Select */}
-            <Autocomplete
-              value={
-                newDetail.product_type
-                  ? { label: newDetail.product_type, value: newDetail.product_type }
-                  : null
-              }
-              onChange={(event, newValue) => {
-                setNewDetail(prev => ({
-                  ...prev,
-                  product_type: newValue ? newValue.value : ''
-                }));
-              }}
-              options={[
-                { label: 'Byproduct', value: 'Byproduct' },
-                { label: 'Finished Product', value: 'Finished Product' }
-              ]}
-              getOptionLabel={(option) => option.label}
-              renderInput={(params) => (
-                <TextField {...params} label="Type" size="small" />
-              )}
-              sx={{ width: 120 }}
-            />
-            <TextField
-              label="Weight Less"
-              name="weight_less"
-              type="number"
-              value={newDetail.weight_less}
-              onChange={handleNewDetailChange}
-              size="small"
-              sx={{ width: 80 }}
-            />
-            <IconButton onClick={handleAddDetail} size="small" sx={{ color: '#1976d2', '&:hover': { backgroundColor: '#e0f2fe' }}}>
-              <PlusOutlined style={{ fontSize: '16px' }} />
-            </IconButton>
-          </Box>
+          <Button variant="outlined" onClick={handleAddDetail} startIcon={<PlusOutlined />}>
+            Add Row
+          </Button>
         </Box>
       )}
+      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, index: null })}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>Are you sure you want to delete this row?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, index: null })}>Cancel</Button>
+          <Button color="error" onClick={confirmDelete}>Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
