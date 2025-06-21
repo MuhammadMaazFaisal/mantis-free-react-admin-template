@@ -12,6 +12,7 @@ import {
   MenuItem,
   Box,
   Typography,
+  Autocomplete,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useChargesTypesQuery } from '../store/services/settings';
@@ -137,22 +138,22 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
       {!isViewMode && (
         <Box sx={{ p: 2, borderTop: '1px solid #e8ecef' }}>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField
-              label="Charges Type"
-              name="charges_type_id"
-              value={newDetail.charges_type_id}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
+            {/* Replace Charges Type Select */}
+            <Autocomplete
+              value={chargesTypes?.find(ct => String(ct.id) === String(newDetail.charges_type_id)) || null}
+              onChange={(event, newValue) => {
+                setNewDetail(prev => ({
+                  ...prev,
+                  charges_type_id: newValue ? newValue.id : ''
+                }));
+              }}
+              options={chargesTypes || []}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField {...params} label="Charges Type" size="small" />
+              )}
               sx={{ width: 120 }}
-            >
-              <MenuItem value="">Select</MenuItem>
-              {chargesTypes?.map((ct) => (
-                <MenuItem key={ct.id} value={ct.id}>
-                  {ct.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
             <TextField
               label="Details"
               name="details"

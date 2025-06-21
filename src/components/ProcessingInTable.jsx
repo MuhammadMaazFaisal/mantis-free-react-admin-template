@@ -12,6 +12,7 @@ import {
   MenuItem,
   Box,
   Typography,
+  Autocomplete,
 } from '@mui/material';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLocationsQuery, useUnitsQuery } from '../store/services/settings';
@@ -236,48 +237,54 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               InputLabelProps={{ shrink: true }}
               sx={{ width: 140 }}
             />
-            <TextField
-              label="Location"
-              name="location_id"
-              value={newDetail.location_id}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
+            {/* Replace Location Select */}
+            <Autocomplete
+              value={locations?.find(loc => loc.id === newDetail.location_id) || null}
+              onChange={(event, newValue) => {
+                setNewDetail(prev => ({
+                  ...prev,
+                  location_id: newValue ? newValue.id : ''
+                }));
+              }}
+              options={locations || []}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField {...params} label="Location" size="small" />
+              )}
               sx={{ width: 120 }}
-            >
-              <MenuItem value="">Select</MenuItem>
-              {locations && locations.map(loc => (
-                <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Product"
-              name="product_id"
-              value={newDetail.product_id}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
+            />
+            {/* Replace Product Select */}
+            <Autocomplete
+              value={products?.find(p => p.id === newDetail.product_id) || null}
+              onChange={(event, newValue) => {
+                setNewDetail(prev => ({
+                  ...prev,
+                  product_id: newValue ? newValue.id : ''
+                }));
+              }}
+              options={products || []}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField {...params} label="Product" size="small" />
+              )}
               sx={{ width: 120 }}
-            >
-              <MenuItem value="">Select</MenuItem>
-              {products && products.map(p => (
-                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Unit"
-              name="unit_id"
-              value={newDetail.unit_id}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
+            />
+            {/* Replace Unit Select */}
+            <Autocomplete
+              value={units?.find(u => u.id === newDetail.unit_id) || null}
+              onChange={(event, newValue) => {
+                setNewDetail(prev => ({
+                  ...prev,
+                  unit_id: newValue ? newValue.id : ''
+                }));
+              }}
+              options={units || []}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField {...params} label="Unit" size="small" />
+              )}
               sx={{ width: 100 }}
-            >
-              <MenuItem value="">Select</MenuItem>
-              {units && units.map(u => (
-                <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
-              ))}
-            </TextField>
+            />
             <TextField
               label="Qty"
               name="qty"
@@ -314,19 +321,29 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
               size="small"
               sx={{ width: 80 }}
             />
-            <TextField
-              label="Type"
-              name="product_type"
-              value={newDetail.product_type}
-              onChange={handleNewDetailChange}
-              select
-              size="small"
+            {/* Replace Type Select */}
+            <Autocomplete
+              value={
+                newDetail.product_type
+                  ? { label: newDetail.product_type, value: newDetail.product_type }
+                  : null
+              }
+              onChange={(event, newValue) => {
+                setNewDetail(prev => ({
+                  ...prev,
+                  product_type: newValue ? newValue.value : ''
+                }));
+              }}
+              options={[
+                { label: 'Byproduct', value: 'Byproduct' },
+                { label: 'Finished Product', value: 'Finished Product' }
+              ]}
+              getOptionLabel={(option) => option.label}
+              renderInput={(params) => (
+                <TextField {...params} label="Type" size="small" />
+              )}
               sx={{ width: 120 }}
-            >
-              <MenuItem value="">Select</MenuItem>
-              <MenuItem value="Byproduct">Byproduct</MenuItem>
-              <MenuItem value="Finished Product">Finished Product</MenuItem>
-            </TextField>
+            />
             <TextField
               label="Weight Less"
               name="weight_less"
