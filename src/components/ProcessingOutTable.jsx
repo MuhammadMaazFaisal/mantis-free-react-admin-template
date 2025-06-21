@@ -45,12 +45,13 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
   }, [details]);
 
   const handleAddDetail = () => {
+    // Add new row while keeping lot_number and date
     const updatedDetails = [...detailsState, newDetail];
     setDetailsState(updatedDetails);
     onChange(updatedDetails);
-    setNewDetail({
-      lot_number: '',
-      date: '',
+    setNewDetail(prev => ({
+      lot_number: prev.lot_number, // keep previous lot_number
+      date: prev.date,             // keep previous date
       location_id: '',
       product_id: '',
       unit_id: '',
@@ -61,7 +62,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
       weight: 0,
       weight_less: 0,
       type: 'processingOut',
-    });
+    }));
   };
 
   const handleDeleteDetail = (index) => {
