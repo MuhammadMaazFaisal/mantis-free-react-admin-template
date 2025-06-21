@@ -242,40 +242,53 @@ const Processing = () => {
         description: formData.description,
         charges_total: formData.charges_total,
         active: formData.active,
-        processing_outs: formData.processing_outs.map(item => ({
-          lot_number: item.lot_number,
-          date: item.date,
-          location_id: item.location_id,
-          product_id: item.product_id,
-          unit_id: item.unit_id,
-          available_qty: item.available_qty,
-          qty: item.qty,
-          qty_less: item.qty_less,
-          available_weight: item.available_weight,
-          weight: item.weight,
-          weight_less: item.weight_less,
-        })),
-        processing_ins: formData.processing_ins.map(item => ({
-          lot_number: item.lot_number,
-          date: item.date,
-          location_id: item.location_id,
-          product_id: item.product_id,
-          unit_id: item.unit_id,
-          qty: item.qty,
-          rate: item.rate,
-          amount: item.amount,
-          weight: item.weight,
-          product_type: item.product_type,
-          weight_less: item.weight_less,
-        })),
-        processing_expenses: formData.processing_expenses.map(item => ({
-          charges_type_id: item.charges_type_id,
-          details: item.details,
-          qty: item.qty,
-          weight: item.weight,
-          rate: item.rate,
-          amount: item.amount,
-        })),
+        processing_outs: formData.processing_outs.map(item => {
+          const out = {
+            lot_number: item.lot_number,
+            date: item.date,
+            location_id: item.location_id,
+            product_id: item.product_id,
+            unit_id: item.unit_id,
+            available_qty: item.available_qty,
+            qty: item.qty,
+            qty_less: item.qty_less,
+            available_weight: item.available_weight,
+            weight: item.weight,
+            weight_less: item.weight_less,
+          };
+          // Only include id if it exists (editing)
+          if (item.id) out.id = item.id;
+          return out;
+        }),
+        processing_ins: formData.processing_ins.map(item => {
+          const ins = {
+            lot_number: item.lot_number,
+            date: item.date,
+            location_id: item.location_id,
+            product_id: item.product_id,
+            unit_id: item.unit_id,
+            qty: item.qty,
+            rate: item.rate,
+            amount: item.amount,
+            weight: item.weight,
+            product_type: item.product_type,
+            weight_less: item.weight_less,
+          };
+          if (item.id) ins.id = item.id;
+          return ins;
+        }),
+        processing_expenses: formData.processing_expenses.map(item => {
+          const exp = {
+            charges_type_id: item.charges_type_id,
+            details: item.details,
+            qty: item.qty,
+            weight: item.weight,
+            rate: item.rate,
+            amount: item.amount,
+          };
+          if (item.id) exp.id = item.id;
+          return exp;
+        }),
       };
 
       if (modalMode === 'add') {
