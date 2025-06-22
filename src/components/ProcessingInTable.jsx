@@ -27,7 +27,6 @@ import { useGetReceivingsQuery } from '../store/services/receivings';
 const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   // Instead of managing separate state, work directly with props
   const safeDetails = Array.isArray(details) ? details : [];
-  console.log('ProcessingInTable - received details:', safeDetails);
   
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
@@ -64,7 +63,6 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
         type: 'processingIn'
       } : row
     );
-    console.log('ProcessingInTable - sending updated data:', updated);
     onChange(updated);
   };
 

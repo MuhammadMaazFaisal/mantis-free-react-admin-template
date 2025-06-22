@@ -78,7 +78,6 @@ const Processing = () => {
   const transformProcessingData = (apiResponse) => {
     if (!apiResponse) return [];
     const dataArr = apiResponse.data ? apiResponse.data : apiResponse;
-    console.log('Transformed Processing Data:', dataArr); // Debugging line
     return dataArr.map(item => ({
       id: item.id,
       date: item.date,
@@ -213,36 +212,25 @@ const Processing = () => {
         processing_expenses: [],
       });
     } else if (Array.isArray(e)) {
-      console.log('Processing - Received array update:', e);
       // Ensure we have at least one item and a valid type
       if (e.length > 0 && e[0]?.type) {
         const type = e[0]?.type;
-        console.log(`Processing - Identified array type: ${type}`);
         
         if (type === 'processingOut') {
-          console.log('Processing - Updating processing_outs in formData', e);
           setFormData((prev) => ({ ...prev, processing_outs: e }));
         } else if (type === 'processingIn') {
-          console.log('Processing - Updating processing_ins in formData', e);
           setFormData((prev) => ({ ...prev, processing_ins: e }));
         } else if (type === 'processingExpenses') {
-          console.log('Processing - Updating processing_expenses in formData', e);
           setFormData((prev) => ({ ...prev, processing_expenses: e }));
-        } else {
-          console.warn('Processing - Unknown array type received:', type);
         }
-      } else {
-        console.warn('Processing - Received array without type identifier:', e);
       }
     } else {
       const { name, value } = e.target;
-      console.log(`Processing - Updating field ${name} to:`, value);
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
   
   const handleSubmit = async () => {
-    console.log('Processing - Submitting formData:', formData);
     if (
       !formData.processing_outs.length ||
       !formData.processing_ins.length ||
@@ -306,8 +294,6 @@ const Processing = () => {
           return exp;
         }),
       };
-
-      console.log('Processing - API payload:', apiData);
       
       if (modalMode === 'add') {
         await addProcessing(apiData).unwrap();
@@ -326,16 +312,13 @@ const Processing = () => {
 
   const renderProcessingOut = ({ data, formData, onChange, isViewMode }) => {
     const details = Array.isArray((data || formData)?.processing_outs) 
-      ? (data || formData)?.processing_outs.map(item => ({ ...item, type: 'processingOut' }))  // Ensure type is set
+      ? (data || formData)?.processing_outs.map(item => ({ ...item, type: 'processingOut' }))
       : [];
-    
-    console.log('renderProcessingOut - passing details:', details);
     
     return (
       <ProcessingOutTable
         details={details}
         onChange={(updatedDetails) => {
-          console.log('Processing - Processing Out onChange received:', updatedDetails);
           onChange(updatedDetails);
         }}
         isViewMode={isViewMode}
@@ -345,16 +328,13 @@ const Processing = () => {
 
   const renderProcessingIn = ({ data, formData, onChange, isViewMode }) => {
     const details = Array.isArray((data || formData)?.processing_ins) 
-      ? (data || formData)?.processing_ins.map(item => ({ ...item, type: 'processingIn' }))  // Ensure type is set
+      ? (data || formData)?.processing_ins.map(item => ({ ...item, type: 'processingIn' }))
       : [];
-    
-    console.log('renderProcessingIn - passing details:', details);
     
     return (
       <ProcessingInTable
         details={details}
         onChange={(updatedDetails) => {
-          console.log('Processing - Processing In onChange received:', updatedDetails);
           onChange(updatedDetails);
         }}
         isViewMode={isViewMode}
@@ -364,16 +344,13 @@ const Processing = () => {
 
   const renderProcessingExpenses = ({ data, formData, onChange, isViewMode }) => {
     const details = Array.isArray((data || formData)?.processing_expenses) 
-      ? (data || formData)?.processing_expenses.map(item => ({ ...item, type: 'processingExpenses' }))  // Ensure type is set
+      ? (data || formData)?.processing_expenses.map(item => ({ ...item, type: 'processingExpenses' }))
       : [];
       
-    console.log('renderProcessingExpenses - passing details:', details);
-    
     return (
       <ProcessingExpensesTable
         details={details}
         onChange={(updatedDetails) => {
-          console.log('Processing - Processing Expenses onChange received:', updatedDetails);
           onChange(updatedDetails);
         }}
         isViewMode={isViewMode}

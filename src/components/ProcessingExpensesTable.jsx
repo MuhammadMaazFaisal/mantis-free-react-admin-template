@@ -24,7 +24,6 @@ import { useChargesTypesQuery } from '../store/services/settings';
 
 const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
   const safeDetails = Array.isArray(details) ? details : [];
-  console.log('ProcessingExpensesTable - received details:', safeDetails);
   
   const { data: chargesTypes } = useChargesTypesQuery();
   const [deleteDialog, setDeleteDialog] = useState({ open: false, index: null });
@@ -47,7 +46,6 @@ const ProcessingExpensesTable = ({ details, onChange, isViewMode }) => {
           }
         : row
     );
-    console.log('ProcessingExpensesTable - sending updated data:', updated);
     onChange(updated);
   };
 
