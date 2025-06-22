@@ -25,8 +25,10 @@ export default function App() {
     <Provider store={store}>
       <ThemeCustomization>
         <ScrollTop>
-          <Suspense fallback={<div>Loading...</div>}>
-            {showLoader && <Loader />}
+          {/* Always show global loader when API calls are in progress */}
+          {showLoader && <Loader />}
+          {/* Use Loader as Suspense fallback for initial lazy loading */}
+          <Suspense fallback={<Loader />}>
             <RouterProvider router={router} />
             <ToastContainer position="top-right" />
           </Suspense>
