@@ -734,13 +734,6 @@ const Processing = () => {
   }
 
   if (isError) {
-    // Show error toast that does not auto-close
-    if (error && !toast.isActive('processing-api-error')) {
-      toast.error(
-        error?.data?.message || error?.message || 'An unexpected error occurred.',
-        { autoClose: false, toastId: 'processing-api-error' }
-      );
-    }
     return (
       <Typography color="error">
         Error fetching processings: {error?.data?.message || error?.message || 'An unexpected error occurred.'}
