@@ -25,7 +25,10 @@ import { useGetProductsQuery } from '../store/services/product';
 import { useGetReceivingsQuery } from '../store/services/receivings';
 
 const ProcessingInTable = ({ details, onChange, isViewMode }) => {
-  const [detailsState, setDetailsState] = useState(Array.isArray(details) ? details : []);
+  // Instead of managing separate state, work directly with props
+  const safeDetails = Array.isArray(details) ? details : [];
+  console.log('ProcessingInTable - received details:', safeDetails);
+  
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
   const { data: products } = useGetProductsQuery();
@@ -46,21 +49,22 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   });
 
   const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
-
   const [deleteDialog, setDeleteDialog] = useState({ open: false, index: null });
-
-  useEffect(() => {
-    setDetailsState(Array.isArray(details) ? details : []);
-  }, [details]);
 
   // Handle change for any row
   const handleDetailChange = (index, field, value) => {
-    const updated = detailsState.map((row, i) =>
-      i === index ? { ...row, [field]: value, amount: field === 'qty' || field === 'rate'
-        ? (field === 'qty' ? value * row.rate : row.qty * value)
-        : row.amount } : row
+    const updated = safeDetails.map((row, i) =>
+      i === index ? { 
+        ...row, 
+        [field]: value, 
+        amount: field === 'qty' || field === 'rate'
+          ? (field === 'qty' ? value * row.rate : row.qty * value)
+          : row.amount,
+        // Explicitly ensure type is preserved
+        type: 'processingIn'
+      } : row
     );
-    setDetailsState(updated);
+    console.log('ProcessingInTable - sending updated data:', updated);
     onChange(updated);
   };
 
@@ -75,7 +79,7 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   };
 
   const handleAddDetail = () => {
-    let prev = detailsState.length > 0 ? detailsState[detailsState.length - 1] : {};
+    let prev = safeDetails.length > 0 ? safeDetails[safeDetails.length - 1] : {};
     const today = new Date().toISOString().slice(0, 10);
     const newRow = {
       lot_number: prev.lot_number || '',
@@ -91,8 +95,7 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
       weight_less: 0,
       type: 'processingIn',
     };
-    setDetailsState([...detailsState, newRow]);
-    onChange([...detailsState, newRow]);
+    onChange([...safeDetails, newRow]);
   };
 
   const handleDeleteDetail = (index) => {
@@ -100,8 +103,7 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   };
 
   const confirmDelete = () => {
-    const updatedDetails = detailsState.filter((_, i) => i !== deleteDialog.index);
-    setDetailsState(updatedDetails);
+    const updatedDetails = safeDetails.filter((_, i) => i !== deleteDialog.index);
     onChange(updatedDetails);
     setDeleteDialog({ open: false, index: null });
   };
@@ -176,14 +178,14 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {detailsState.length === 0 ? (
+            {safeDetails.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={isViewMode ? 11 : 12} sx={{ textAlign: 'center', color: '#64748b' }}>
                   No finished products available.
                 </TableCell>
               </TableRow>
             ) : (
-              detailsState.map((detail, index) => (
+              safeDetails.map((detail, index) => (
                 <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa', '&:hover': { backgroundColor: '#f8fafc' }}}>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
                     {isViewMode ? (detail.lot_number || '-') : (
