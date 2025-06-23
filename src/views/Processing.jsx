@@ -41,8 +41,10 @@ const Processing = () => {
   const detailsRef = useRef();
 
   const handlePrint = () => {
+    // Always use the latest, full data for printing
+    const fullProcessing = processings.find(p => p.id === selectedProcessing?.id);
     const printContent = ReactDOMServer.renderToStaticMarkup(
-      <PrintProcessingDocument processing={selectedProcessing} />
+      <PrintProcessingDocument processing={fullProcessing || selectedProcessing} />
     );
     const style = `
       <style>
@@ -174,10 +176,16 @@ const Processing = () => {
 
   const handleOpenModal = (mode, processing = null) => {
     setModalMode(mode);
-    setSelectedProcessing(processing);
-    if (processing) {
+    if (processing && mode === 'view') {
+      // Always use the latest, full data from processings array
+      const fullProcessing = processings.find(p => p.id === processing.id);
+      setSelectedProcessing(fullProcessing || processing);
+      setFormData(fullProcessing || processing);
+    } else if (processing) {
+      setSelectedProcessing(processing);
       setFormData(processing);
     } else {
+      setSelectedProcessing(null);
       setFormData({
         date: '',
         party_id: '',
@@ -369,361 +377,405 @@ const Processing = () => {
     </Box>
   );
 
- const PrintProcessingDocument = ({ processing }) => {
+  // Get all products and units for resolving names in print
+  // (You may already have these in context or props, but for print, fetch from the first available processing)
+  const allProducts =
+    processings.flatMap(p => [
+      ...(p.processing_outs || []),
+      ...(p.processing_ins || [])
+    ])
+    .map(item => item.product)
+    .filter(Boolean);
+
+  const allUnits =
+    processings.flatMap(p => [
+      ...(p.processing_outs || []),
+      ...(p.processing_ins || [])
+    ])
+    .map(item => item.unit)
+    .filter(Boolean);
+
+  // Helper to resolve product/unit by id
+  const resolveProduct = (id) =>
+    allProducts.find(p => String(p?.id) === String(id));
+  const resolveUnit = (id) =>
+    allUnits.find(u => String(u?.id) === String(id));
+
+  const PrintProcessingDocument = ({ processing }) => {
+    console.log('PrintProcessingDocument', processing);
+
     if (!processing) return null;
 
-    // Calculate totals
-    const rawMaterialTotal = processing.processing_outs.reduce((acc, item) => ({
-        qty: acc.qty + Number(item.qty || 0),
-        netQty: acc.netQty + Number(item.qty - (item.qty_less || 0)),
-        weight: acc.weight + Number(item.weight || 0),
-        netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0)),
+    // Patch processing_outs/ins to always have .product and .unit objects (like in view)
+    const processing_outs = (processing.processing_outs || []).map(item => ({
+      ...item,
+      product: item.product || resolveProduct(item.product_id) || {},
+      unit: item.unit || resolveUnit(item.unit_id) || {},
+    }));
+    const processing_ins = (processing.processing_ins || []).map(item => ({
+      ...item,
+      product: item.product || resolveProduct(item.product_id) || {},
+      unit: item.unit || resolveUnit(item.unit_id) || {},
+    }));
+
+    // Calculate totals using patched arrays
+    const rawMaterialTotal = processing_outs.reduce((acc, item) => ({
+      qty: acc.qty + Number(item.qty || 0),
+      netQty: acc.netQty + Number(item.qty - (item.qty_less || 0)),
+      weight: acc.weight + Number(item.weight || 0),
+      netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0)),
     }), { qty: 0, netQty: 0, weight: 0, netWeight: 0 });
 
-    const finishedProductsTotal = processing.processing_ins
-        .filter(item => item.product_type === 'Processed')
-        .reduce((acc, item) => ({
-            qty: acc.qty + Number(item.qty || 0),
-            weight: acc.weight + Number(item.weight || 0),
-            netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0))
-        }), { qty: 0, weight: 0, netWeight: 0 });
+    const finishedProductsTotal = processing_ins
+      .filter(item => item.product_type === 'Processed')
+      .reduce((acc, item) => ({
+        qty: acc.qty + Number(item.qty || 0),
+        weight: acc.weight + Number(item.weight || 0),
+        netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0))
+      }), { qty: 0, weight: 0, netWeight: 0 });
 
-    const byProductsTotal = processing.processing_ins
-        .filter(item => item.product_type === 'Byproduct')
-        .reduce((acc, item) => ({
-            qty: acc.qty + Number(item.qty || 0),
-            weight: acc.weight + Number(item.weight || 0),
-            netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0))
-        }), { qty: 0, weight: 0, netWeight: 0 });
+    const byProductsTotal = processing_ins
+      .filter(item => item.product_type === 'Byproduct')
+      .reduce((acc, item) => ({
+        qty: acc.qty + Number(item.qty || 0),
+        weight: acc.weight + Number(item.weight || 0),
+        netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0))
+      }), { qty: 0, weight: 0, netWeight: 0 });
 
     const grandTotal = {
-        qty: finishedProductsTotal.qty + byProductsTotal.qty,
-        weight: finishedProductsTotal.weight + byProductsTotal.weight,
-        netWeight: finishedProductsTotal.netWeight + byProductsTotal.netWeight,
+      qty: finishedProductsTotal.qty + byProductsTotal.qty,
+      weight: finishedProductsTotal.weight + byProductsTotal.weight,
+      netWeight: finishedProductsTotal.netWeight + byProductsTotal.netWeight,
     };
 
     const weightDifference = rawMaterialTotal.netWeight - grandTotal.netWeight;
 
     return (
-        <div style={{ 
-            padding: '15px', 
-            fontFamily: 'Arial, sans-serif', 
-            fontSize: '14px',
-            maxWidth: '100%',
-            margin: '0 auto'
-        }}>
-            {/* Prominent Header */}
-            <div style={{ 
-                textAlign: 'center', 
-                marginBottom: '15px',
-                borderBottom: '2px solid #000',
-                paddingBottom: '10px'
-            }}>
-                <div style={{ 
-                    fontSize: '24px', 
-                    fontWeight: 'bold',
-                    marginBottom: '5px',
-                    color: '#333'
-                }}>SA RICE MILL</div>
-                <div style={{ 
-                    fontSize: '16px',
-                    marginBottom: '5px'
-                }}>
-                    Plot # 208 & 209 Yousuf Goth, Hub River Road, Karachi
-                </div>
-                <div style={{ 
-                    fontSize: '14px',
-                    fontWeight: '500'
-                }}>
-                    Contact: 03212244574 | Email: ioointernation@gmail.com
-                </div>
-            </div>
+      <div style={{ 
+          padding: '15px', 
+          fontFamily: 'Arial, sans-serif', 
+          fontSize: '14px',
+          maxWidth: '100%',
+          margin: '0 auto'
+      }}>
+          {/* Prominent Header */}
+          <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '15px',
+              borderBottom: '2px solid #000',
+              paddingBottom: '10px'
+          }}>
+              <div style={{ 
+                  fontSize: '24px', 
+                  fontWeight: 'bold',
+                  marginBottom: '5px',
+                  color: '#333'
+              }}>SA RICE MILL</div>
+              <div style={{ 
+                  fontSize: '16px',
+                  marginBottom: '5px'
+              }}>
+                  Plot # 208 & 209 Yousuf Goth, Hub River Road, Karachi
+              </div>
+              <div style={{ 
+                  fontSize: '14px',
+                  fontWeight: '500'
+              }}>
+                  Contact: 03212244574 | Email: ioointernation@gmail.com
+              </div>
+          </div>
 
-            {/* Document Info */}
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                marginBottom: '15px',
-                fontSize: '14px',
-                backgroundColor: '#f5f5f5',
-                padding: '10px',
-                borderRadius: '5px'
-            }}>
-                <div>
-                    <strong>Date:</strong> {processing.date}
-                </div>
-                <div>
-                    <strong>Party:</strong> {processing.party ? processing.party.name : processing.partyName}
-                </div>
-                <div>
-                    <strong>Process#:</strong> {processing.id}
-                </div>
-            </div>
+          {/* Document Info */}
+          <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              marginBottom: '15px',
+              fontSize: '14px',
+              backgroundColor: '#f5f5f5',
+              padding: '10px',
+              borderRadius: '5px'
+          }}>
+              <div>
+                  <strong>Date:</strong> {processing.date}
+              </div>
+              <div>
+                  <strong>Party:</strong> {processing.party ? processing.party.name : processing.partyName}
+              </div>
+              <div>
+                  <strong>Process#:</strong> {processing.id}
+              </div>
+          </div>
 
-            {/* Raw Material Section */}
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ 
-                    fontWeight: 'bold',
-                    fontSize: '18px',
-                    borderBottom: '2px solid #000',
-                    marginBottom: '10px',
-                    paddingBottom: '5px'
-                }}>RAW MATERIAL</div>
-                <table style={{ 
-                    width: '100%', 
-                    borderCollapse: 'collapse',
-                    fontSize: '14px'
-                }}>
-                    <thead>
-                        <tr style={{ 
-                            borderBottom: '2px solid #000',
-                            backgroundColor: '#f5f5f5'
-                        }}>
-                            <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Date</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
-                            <th style={{ width: '20%', padding: '8px' }}>Product</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Qty</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
-                            <th style={{ width: '5%', padding: '8px' }}>Unit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {processing.processing_outs.map((item, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                                <td style={{ padding: '8px' }}>{index + 1}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
-                                <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_qty}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_weight}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
-                            </tr>
-                        ))}
-                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                            <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.qty}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}></td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.netQty}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.weight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}></td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.netWeight}</td>
-                            <td style={{ padding: '8px' }}></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+          {/* Raw Material Section */}
+          <div style={{ marginBottom: '20px' }}>
+              <div style={{ 
+                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  borderBottom: '2px solid #000',
+                  marginBottom: '10px',
+                  paddingBottom: '5px'
+              }}>RAW MATERIAL</div>
+              <table style={{ 
+                  width: '100%', 
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+              }}>
+                  <thead>
+                      <tr style={{ 
+                          borderBottom: '2px solid #000',
+                          backgroundColor: '#f5f5f5'
+                      }}>
+                          <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Date</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
+                          <th style={{ width: '20%', padding: '8px' }}>Product</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Qty</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
+                          <th style={{ width: '5%', padding: '8px' }}>Unit</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {processing_outs.map((item, index) => (
+                          <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                              <td style={{ padding: '8px' }}>{index + 1}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
+                              <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_qty}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty_less || 0}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.available_weight}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
+                          </tr>
+                      ))}
+                      <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                          <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.qty}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}></td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.netQty}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.weight}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}></td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.netWeight}</td>
+                          <td style={{ padding: '8px' }}></td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
 
-            {/* Finished Products Section */}
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ 
-                    fontWeight: 'bold',
-                    fontSize: '18px',
-                    borderBottom: '2px solid #000',
-                    marginBottom: '10px',
-                    paddingBottom: '5px'
-                }}>FINISHED PRODUCTS</div>
-                <table style={{ 
-                    width: '100%', 
-                    borderCollapse: 'collapse',
-                    fontSize: '14px'
-                }}>
-                    <thead>
-                        <tr style={{ 
-                            borderBottom: '2px solid #000',
-                            backgroundColor: '#f5f5f5'
-                        }}>
-                            <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Date</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
-                            <th style={{ width: '20%', padding: '8px' }}>Product</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Ratio %</th>
-                            <th style={{ width: '5%', padding: '8px' }}>Unit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {processing.processing_ins.filter(item => item.product_type === 'Processed').map((item, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                                <td style={{ padding: '8px' }}>{index + 1}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
-                                <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight - (item.weight_less || 0)}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>
-                                    {rawMaterialTotal.netWeight ? (((item.weight - (item.weight_less || 0)) / rawMaterialTotal.netWeight * 100).toFixed(2)) : '0.00'}%
-                                </td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
-                            </tr>
-                        ))}
-                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                            <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.qty}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.weight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}></td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.netWeight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>
-                                {rawMaterialTotal.netWeight ? ((finishedProductsTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
-                            </td>
-                            <td style={{ padding: '8px' }}></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+          {/* Finished Products Section */}
+          <div style={{ marginBottom: '20px' }}>
+              <div style={{ 
+                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  borderBottom: '2px solid #000',
+                  marginBottom: '10px',
+                  paddingBottom: '5px'
+              }}>FINISHED PRODUCTS</div>
+              <table style={{ 
+                  width: '100%', 
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+              }}>
+                  <thead>
+                      <tr style={{ 
+                          borderBottom: '2px solid #000',
+                          backgroundColor: '#f5f5f5'
+                      }}>
+                          <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Date</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
+                          <th style={{ width: '20%', padding: '8px' }}>Product</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Ratio %</th>
+                          <th style={{ width: '5%', padding: '8px' }}>Unit</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {processing_ins.filter(item => item.product_type === 'Processed').map((item, index) => (
+                          <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                              <td style={{ padding: '8px' }}>{index + 1}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
+                              <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight - (item.weight_less || 0)}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>
+                                  {rawMaterialTotal.netWeight ? (((item.weight - (item.weight_less || 0)) / rawMaterialTotal.netWeight * 100).toFixed(2)) : '0.00'}%
+                              </td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
+                          </tr>
+                      ))}
+                      <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                          <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.qty}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.weight}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}></td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{finishedProductsTotal.netWeight}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>
+                              {rawMaterialTotal.netWeight ? ((finishedProductsTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
+                          </td>
+                          <td style={{ padding: '8px' }}></td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
 
-            {/* By Products Section */}
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ 
-                    fontWeight: 'bold',
-                    fontSize: '18px',
-                    borderBottom: '2px solid #000',
-                    marginBottom: '10px',
-                    paddingBottom: '5px'
-                }}>BY PRODUCTS</div>
-                <table style={{ 
-                    width: '100%', 
-                    borderCollapse: 'collapse',
-                    fontSize: '14px'
-                }}>
-                    <thead>
-                        <tr style={{ 
-                            borderBottom: '2px solid #000',
-                            backgroundColor: '#f5f5f5'
-                        }}>
-                            <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Date</th>
-                            <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
-                            <th style={{ width: '20%', padding: '8px' }}>Product</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
-                            <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Ratio %</th>
-                            <th style={{ width: '5%', padding: '8px' }}>Unit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {processing.processing_ins.filter(item => item.product_type === 'Byproduct').map((item, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                                <td style={{ padding: '8px' }}>{index + 1}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
-                                <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight - (item.weight_less || 0)}</td>
-                                <td style={{ textAlign: 'right', padding: '8px' }}>
-                                    {rawMaterialTotal.netWeight ? (((item.weight - (item.weight_less || 0)) / rawMaterialTotal.netWeight * 100).toFixed(2)) : '0.00'}%
-                                </td>
-                                <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
-                            </tr>
-                        ))}
-                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                            <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.qty}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.weight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}></td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.netWeight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>
-                                {rawMaterialTotal.netWeight ? ((byProductsTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
-                            </td>
-                            <td style={{ padding: '8px' }}></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+          {/* By Products Section */}
+          <div style={{ marginBottom: '20px' }}>
+              <div style={{ 
+                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  borderBottom: '2px solid #000',
+                  marginBottom: '10px',
+                  paddingBottom: '5px'
+              }}>BY PRODUCTS</div>
+              <table style={{ 
+                  width: '100%', 
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+              }}>
+                  <thead>
+                      <tr style={{ 
+                          borderBottom: '2px solid #000',
+                          backgroundColor: '#f5f5f5'
+                      }}>
+                          <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Date</th>
+                          <th style={{ width: '10%', padding: '8px' }}>Lot #</th>
+                          <th style={{ width: '20%', padding: '8px' }}>Product</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Qty</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Weight</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Less</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Net Wt.</th>
+                          <th style={{ width: '8%', textAlign: 'right', padding: '8px' }}>Ratio %</th>
+                          <th style={{ width: '5%', padding: '8px' }}>Unit</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {processing_ins.filter(item => item.product_type === 'Byproduct').map((item, index) => (
+                          <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                              <td style={{ padding: '8px' }}>{index + 1}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.date}</td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.lot_number}</td>
+                              <td style={{ padding: '8px' }}>{item.product?.name || 'Product'}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.qty}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight_less || 0}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>{item.weight - (item.weight_less || 0)}</td>
+                              <td style={{ textAlign: 'right', padding: '8px' }}>
+                                  {rawMaterialTotal.netWeight ? (((item.weight - (item.weight_less || 0)) / rawMaterialTotal.netWeight * 100).toFixed(2)) : '0.00'}%
+                              </td>
+                              <td style={{ textAlign: 'center', padding: '8px' }}>{item.unit?.name || 'Unit'}</td>
+                          </tr>
+                      ))}
+                      <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                          <td colSpan="4" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.qty}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.weight}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}></td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>{byProductsTotal.netWeight}</td>
+                          <td style={{ textAlign: 'right', padding: '8px' }}>
+                              {rawMaterialTotal.netWeight ? ((byProductsTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
+                          </td>
+                          <td style={{ padding: '8px' }}></td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
 
-            {/* Summary Section */}
-            <div style={{ 
-                marginBottom: '20px',
-                textAlign: 'right',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                backgroundColor: '#f5f5f5',
-                padding: '10px',
-                borderRadius: '5px'
-            }}>
-                <div>Grand Total: {grandTotal.qty} | {grandTotal.weight} | {grandTotal.netWeight} | 
-                    {rawMaterialTotal.netWeight ? ((grandTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
-                </div>
-                <div>Weight Difference: {weightDifference}</div>
-            </div>
+          {/* Summary Section */}
+          <div style={{ 
+              marginBottom: '20px',
+              textAlign: 'right',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              backgroundColor: '#f5f5f5',
+              padding: '10px',
+              borderRadius: '5px'
+          }}>
+              <div>Grand Total: {grandTotal.qty} | {grandTotal.weight} | {grandTotal.netWeight} | 
+                  {rawMaterialTotal.netWeight ? ((grandTotal.netWeight / rawMaterialTotal.netWeight) * 100).toFixed(2) : '0.00'}%
+              </div>
+              <div>Weight Difference: {weightDifference}</div>
+          </div>
 
-            {/* Invoice Section */}
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ 
-                    fontWeight: 'bold',
-                    fontSize: '18px',
-                    borderBottom: '2px solid #000',
-                    marginBottom: '10px',
-                    paddingBottom: '5px'
-                }}>INVOICE</div>
-                <table style={{ 
-                    width: '100%', 
-                    borderCollapse: 'collapse',
-                    fontSize: '14px'
-                }}>
-                    <thead>
-                        <tr style={{ 
-                            borderBottom: '2px solid #000',
-                            backgroundColor: '#f5f5f5'
-                        }}>
-                            <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
-                            <th style={{ width: '45%', padding: '8px' }}>Description</th>
-                            <th style={{ width: '10%', textAlign: 'right', padding: '8px' }}>Qty</th>
-                            <th style={{ width: '10%', textAlign: 'right', padding: '8px' }}>Weight</th>
-                            <th style={{ width: '15%', textAlign: 'right', padding: '8px' }}>Rate</th>
-                            <th style={{ width: '15%', textAlign: 'right', padding: '8px' }}>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '8px' }}>1</td>
-                            <td style={{ padding: '8px' }}>Processing Charges</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{processing.processing_outs[0]?.qty || 0}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{rawMaterialTotal.netWeight}</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>
-                                {(processing.charges_total / rawMaterialTotal.netWeight).toFixed(2)}
-                            </td>
+          {/* Invoice Section */}
+          <div style={{ marginBottom: '20px' }}>
+              <div style={{ 
+                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  borderBottom: '2px solid #000',
+                  marginBottom: '10px',
+                  paddingBottom: '5px'
+              }}>INVOICE</div>
+              <table style={{ 
+                  width: '100%', 
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+              }}>
+                  <thead>
+                      <tr style={{ 
+                          borderBottom: '2px solid #000',
+                          backgroundColor: '#f5f5f5'
+                      }}>
+                          <th style={{ width: '5%', textAlign: 'left', padding: '8px' }}>S.No.</th>
+                          <th style={{ width: '45%', padding: '8px' }}>Description</th>
+                          <th style={{ width: '10%', textAlign: 'right', padding: '8px' }}>Qty</th>
+                          <th style={{ width: '10%', textAlign: 'right', padding: '8px' }}>Weight</th>
+                          <th style={{ width: '15%', textAlign: 'right', padding: '8px' }}>Rate</th>
+                          <th style={{ width: '15%', textAlign: 'right', padding: '8px' }}>Amount</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {Array.isArray(processing.processing_expenses) && processing.processing_expenses.length > 0 ? (
+    processing.processing_expenses.map((expense, idx) => (
+      <tr key={expense.id || idx} style={{ borderBottom: '1px solid #ddd' }}>
+        <td style={{ padding: '8px' }}>{idx + 1}</td>
+        <td style={{ padding: '8px' }}>{expense.charges_type?.name || '-'}</td>
+        <td style={{ textAlign: 'right', padding: '8px' }}>{expense.qty || 0}</td>
+        <td style={{ textAlign: 'right', padding: '8px' }}>{expense.weight || 0}</td>
+        <td style={{ textAlign: 'right', padding: '8px' }}>{expense.rate || 0}</td>
+        <td style={{ textAlign: 'right', padding: '8px' }}>{expense.amount || 0}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={6} style={{ textAlign: 'center', padding: '8px' }}>No expenses available.</td>
+    </tr>
+  )}
+  <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+    <td colSpan="5" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
                             <td style={{ textAlign: 'right', padding: '8px' }}>{processing.charges_total}</td>
-                        </tr>
-                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                            <td colSpan="5" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
-                            <td style={{ textAlign: 'right', padding: '8px' }}>{processing.charges_total}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+  </tr>
+                  </tbody>
+              </table>
+          </div>
 
-            {/* Footer Note */}
-            <div style={{ 
-                fontSize: '14px',
-                fontStyle: 'italic',
-                textAlign: 'center',
-                marginTop: '20px',
-                padding: '10px',
-                borderTop: '1px solid #000'
-            }}>
-                NOTE: Rent Would Be Charged After 15 Days Of Milling.
-            </div>
-        </div>
+          {/* Footer Note */}
+          <div style={{ 
+              fontSize: '14px',
+              fontStyle: 'italic',
+              textAlign: 'center',
+              marginTop: '20px',
+              padding: '10px',
+              borderTop: '1px solid #000'
+          }}>
+              NOTE: Rent Would Be Charged After 15 Days Of Milling.
+          </div>
+      </div>
     );
-};
+  };
 
   if (isLoading) {
     return (
