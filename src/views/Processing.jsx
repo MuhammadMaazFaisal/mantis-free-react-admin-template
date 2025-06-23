@@ -101,6 +101,15 @@ const Processing = () => {
 
       printWindow.document.close();
 
+      // Close the print window after printing or closing the print dialog
+      const closePrintWindow = () => {
+        setTimeout(() => {
+          if (!printWindow.closed) {
+            printWindow.close();
+          }
+        }, 100);
+      };
+
       printWindow.onload = () => {
         console.log('[Processing] Print window loaded, initiating print...');
         try {
@@ -113,6 +122,20 @@ const Processing = () => {
           toast.error('Failed to print document');
         }
       };
+
+      // Listen for print events and close the window
+      printWindow.addEventListener('afterprint', closePrintWindow);
+      printWindow.addEventListener('focus', () => {
+        // In some browsers, afterprint may not fire, so close on focus after print
+        setTimeout(() => {
+          if (printWindow.document.readyState === 'complete') {
+            closePrintWindow();
+          }
+        }, 500);
+      });
+
+      // Fallback: close if the window is unloaded (user closes tab)
+      printWindow.addEventListener('beforeunload', closePrintWindow);
     } catch (err) {
       console.error('[Processing] Error in handlePrint:', err);
       toast.error('Failed to generate print document');
