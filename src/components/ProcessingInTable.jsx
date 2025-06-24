@@ -31,24 +31,56 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
   const { data: locations } = useLocationsQuery();
   const { data: units } = useUnitsQuery();
   const { data: products } = useGetProductsQuery();
-
-  const [newDetail, setNewDetail] = useState({
-    lot_number: '',
-    date: '',
-    location_id: '',
-    product_id: '',
-    unit_id: '',
-    qty: 0,
-    rate: 0,
-    amount: 0,
-    weight: 0,
-    product_type: '',
-    weight_less: 0,
-    type: 'processingIn',
-  });
-
-  const { data: receivingsData } = useGetReceivingsQuery(undefined, { skip: !(newDetail.lot_number && newDetail.location_id) });
+  const { data: receivingsData } = useGetReceivingsQuery();
   const [deleteDialog, setDeleteDialog] = useState({ open: false, index: null });
+
+  // Autofill row details when lot_number and location_id are entered
+  useEffect(() => {
+    if (!receivingsData || !Array.isArray(safeDetails)) return;
+
+    let updated = [...safeDetails];
+    let changed = false;
+
+    updated.forEach((row, idx) => {
+      // Only autofill if both lot_number and location_id are present and qty is 0 (not filled yet)
+      if (
+        row.lot_number &&
+        row.location_id &&
+        (row.qty === 0 || row.product_id === '' || row.unit_id === '' || row.weight === 0)
+      ) {
+        const matchingReceiving = receivingsData.find(
+          r => r.lot_number === row.lot_number
+        );
+        if (matchingReceiving && Array.isArray(matchingReceiving.details)) {
+          const matchingDetail = matchingReceiving.details.find(
+            d => String(d.location_id) === String(row.location_id)
+          );
+          if (matchingDetail) {
+            // Only update if not already filled
+            if (
+              row.product_id !== matchingDetail.product.id ||
+              row.unit_id !== matchingDetail.product.unit_id ||
+              row.qty !== parseFloat(matchingDetail.quantity) ||
+              row.weight !== parseFloat(matchingDetail.weight)
+            ) {
+              updated[idx] = {
+                ...row,
+                product_id: matchingDetail.product.id,
+                unit_id: matchingDetail.product.unit_id,
+                qty: parseFloat(matchingDetail.quantity),
+                weight: parseFloat(matchingDetail.weight),
+              };
+              changed = true;
+            }
+          }
+        }
+      }
+    });
+
+    if (changed) {
+      onChange(updated);
+    }
+  }, [safeDetails, receivingsData, onChange]);
 
   // Handle change for any row
   const handleDetailChange = (index, field, value) => {
@@ -105,26 +137,6 @@ const ProcessingInTable = ({ details, onChange, isViewMode }) => {
     onChange(updatedDetails);
     setDeleteDialog({ open: false, index: null });
   };
-
-  // Autofill newDetail when receivingsData is received and qty is 0 (i.e. not auto-filled yet)
-  useEffect(() => {
-    if (receivingsData && newDetail.lot_number && newDetail.location_id && newDetail.qty === 0) {
-      const matchingReceivings = receivingsData.filter(r => r.lot_number === newDetail.lot_number);
-      if (matchingReceivings.length > 0) {
-        const receiving = matchingReceivings[0];
-        const matchingDetail = receiving.details.find(d => String(d.location_id) === String(newDetail.location_id));
-        if (matchingDetail) {
-          setNewDetail(prev => ({
-            ...prev,
-            product_id: matchingDetail.product.id,
-            unit_id: matchingDetail.product.unit_id,
-            qty: parseFloat(matchingDetail.quantity),
-            weight: parseFloat(matchingDetail.weight),
-          }));
-        }
-      }
-    }
-  }, [receivingsData, newDetail.lot_number, newDetail.location_id, newDetail.qty]);
 
   return (
     <Box sx={{ mb: 3 }}>
