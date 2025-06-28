@@ -63,19 +63,27 @@ const Processing = () => {
 
       const style = `
       <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; }
-        .print-header { background: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; }
-        .print-title { font-size: 28px; font-weight: bold; margin: 0; }
-        .print-subtitle { font-size: 16px; margin: 0; }
-        .print-section { margin: 20px 0; }
-        .print-section-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .print-table th, .print-table td { border: 1px solid #ddd; padding: 10px; }
-        .print-table th { background: #f2f2f2; text-align: left; }
-        .print-total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 10px; }
-        .print-note { font-size: 14px; font-style: italic; margin-top: 10px; }
-      </style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, sans-serif; font-size: 12px; }
+      .print-header { background: #f8f8f8; padding: 5px; border-bottom: 1px solid #ddd; }
+      .print-title { font-size: 22px; font-weight: bold; margin: 0; }
+      .print-subtitle { font-size: 14px; margin: 0; }
+      .print-section { margin: 12px 0; }
+      .print-section-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+      .print-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+      .print-table th, .print-table td {
+        border: 1px solid #999;
+        padding: 2px 4px;
+        font-size: 10px;
+      }
+      .print-table th {
+        background: #eee;
+        text-align: left;
+      }
+      .print-total { font-size: 14px; font-weight: bold; text-align: right; margin-top: 8px; }
+      .print-note { font-size: 12px; font-style: italic; margin-top: 10px; }
+    </style>
+
     `;
 
       console.log('[Processing] Opening print window...');
@@ -517,10 +525,11 @@ const Processing = () => {
 
     // Calculate totals using patched arrays
     const rawMaterialTotal = processing_outs.reduce((acc, item) => ({
-      qty: acc.qty + Number(item.qty || 0),
-      netQty: acc.netQty + Number(item.qty - (item.qty_less || 0)),
-      weight: acc.weight + Number(item.weight || 0),
-      netWeight: acc.netWeight + Number(item.weight - (item.weight_less || 0)),
+      qty: acc.qty + Number(item.available_qty || item.qty || 0),
+      netQty: acc.netQty + Number((item.available_qty || 0) - (item.qty_less || 0)),
+      weight: acc.weight + Number(item.available_weight || item.weight || 0),
+      netWeight: acc.netWeight + Number((item.available_weight || 0) - (item.weight_less || 0)),
+
     }), { qty: 0, netQty: 0, weight: 0, netWeight: 0 });
 
     const finishedProductsTotal = processing_ins
@@ -546,6 +555,14 @@ const Processing = () => {
     };
 
     const weightDifference = rawMaterialTotal.netWeight - grandTotal.netWeight;
+
+    const invoiceTotal = (processing.processing_expenses || []).reduce((sum, exp) => {
+      return sum + Number(exp.amount || 0);
+    }, 0);
+
+    const totalExpenseWeight = (processing.processing_expenses || []).reduce((sum, exp) => {
+  return sum + Number(exp.weight || 0);
+}, 0);
 
     return (
       <div style={{
@@ -853,7 +870,9 @@ const Processing = () => {
               )}
               <tr style={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
                 <td colSpan="5" style={{ textAlign: 'right', padding: '8px' }}>Total</td>
-                <td style={{ textAlign: 'right', padding: '8px' }}>{processing.charges_total}</td>
+                <td style={{ textAlign: 'right', padding: '8px' }}>
+  {invoiceTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+</td>
               </tr>
             </tbody>
           </table>

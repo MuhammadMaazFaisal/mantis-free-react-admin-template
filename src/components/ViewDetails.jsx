@@ -1,6 +1,17 @@
 import React from 'react';
 import { Typography, Box, Grid, Paper } from '@mui/material';
 
+// Helper function to format object values for display
+const formatObjectValue = (value) => {
+  if (!value || typeof value !== 'object') return '-';
+  // Try to display 'name' if present, else fallback to id, else JSON
+  if ('name' in value) return value.name;
+  if ('label' in value) return value.label;
+  if ('account_name' in value) return value.account_name;
+  if ('id' in value) return `ID: ${value.id}`;
+  return JSON.stringify(value);
+};
+
 const ViewDetails = ({ data, title, detailsRef, fields, renderCustomContent }) => {
   // Helper function to convert a value to a string for display
   const formatValueForDisplay = (value, fieldName) => {
@@ -11,7 +22,7 @@ const ViewDetails = ({ data, title, detailsRef, fields, renderCustomContent }) =
       return value.length > 0 ? `${value.length} items` : 'None';
     }
     if (typeof value === 'object') {
-      return JSON.stringify(value); // Convert objects to JSON string
+      return formatObjectValue(value);
     }
     if (typeof value === 'boolean') {
       return value ? 'Yes' : 'No';

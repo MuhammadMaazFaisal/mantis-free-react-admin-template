@@ -94,8 +94,16 @@ const Product = () => {
     const viewFields = [
         { name: 'id', label: 'ID' },
         { name: 'name', label: 'Product Name' },
-        { name: 'product_group', label: 'Product Group', format: (value) => value?.name || '' },
-        { name: 'unit', label: 'Unit', format: (value) => value?.name || '' },
+        { 
+            name: 'product_group', 
+            label: 'Product Group', 
+            format: (value) => value?.name || '' 
+        },
+        { 
+            name: 'unit', 
+            label: 'Unit', 
+            format: (value) => value?.name || '' 
+        },
         { name: 'created_at', label: 'Created At', format: (value) => new Date(value).toLocaleDateString() },
         { name: 'updated_at', label: 'Updated At', format: (value) => new Date(value).toLocaleDateString() },
     ];
