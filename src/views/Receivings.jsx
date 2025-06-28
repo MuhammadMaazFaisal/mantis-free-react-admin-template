@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Receivings = () => {
   const navigate = useNavigate();
-  const { data: receivings, isLoading } = useGetReceivingsQuery();
+  const { data: receivings, isLoading, refetch } = useGetReceivingsQuery();
   const { data: parties } = useGetPartiesQuery();
   const { data: locations } = useLocationsQuery();
   const [addReceiving] = useAddReceivingMutation();
@@ -246,12 +246,16 @@ const Receivings = () => {
       details: transformedDetails,
     };
 
+    const afterSubmit = () => {
+      handleCloseModal();
+      refetch(); // Fetch updated receivings after add/edit
+    };
+
     if (modalMode === 'add') {
-      addReceiving(formattedData);
+      addReceiving(formattedData).then(afterSubmit);
     } else if (modalMode === 'edit') {
-      updateReceiving({ ...formattedData, id: selectedReceiving.id });
+      updateReceiving({ ...formattedData, id: selectedReceiving.id }).then(afterSubmit);
     }
-    handleCloseModal();
   };
 
   const renderReceivingDetails = ({ data, formData, onChange, isViewMode }) => (

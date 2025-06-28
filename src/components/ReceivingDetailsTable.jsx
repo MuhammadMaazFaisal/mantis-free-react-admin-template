@@ -291,7 +291,8 @@ const ReceivingDetailsTable = ({ details, onChange, isViewMode, locationOptions 
           })}
         </TableBody>
       </Table>
-      {!isViewMode && !addingRow && (
+      {/* Always show Add Row button when not in view mode */}
+      {!isViewMode && (
         <Box sx={{ p: 2, borderTop: '1px solid #e8ecef' }}>
           <Button variant="outlined" onClick={handleAddRow} startIcon={<PlusOutlined />}>
             Add Row
