@@ -124,7 +124,16 @@ const Receivings = () => {
       setFormData({
         ...formatReceivingData(receiving),
         party_id: receiving.party?.id || receiving.party_id || '',
-        // Removed setting location from formData.
+        // Normalize details for edit/view mode
+        details: (receiving.details || []).map(d => ({
+          ...d,
+          product: d.product || d.product_id || '',
+          location: d.location || d.location_id || '',
+          quantity: d.quantity ? parseFloat(d.quantity) : 0,
+          weight: d.weight ? parseFloat(d.weight) : 0,
+          rate: d.rate ? parseFloat(d.rate) : 0,
+          amount: d.amount ? parseFloat(d.amount) : 0,
+        })),
       });
     } else {
       setFormData({
@@ -179,15 +188,51 @@ const Receivings = () => {
   };
 
   const handleSubmit = () => {
-    // Transform details to use "product_id" and "location_id" as required by the API
-    const transformedDetails = formData.details.map(detail => ({
-      product_id: detail.product,
-      location_id: typeof detail.location === 'object' ? detail.location.id : detail.location || null,
-      quantity: detail.quantity,
-      weight: detail.weight,
-      rate: detail.rate,
-      amount: detail.amount,
-    }));
+    // Transform details to use "product_id", "location_id", and include "id" if present
+    const transformedDetails = formData.details.map(detail => {
+      // Try to extract location_id robustly
+      let location_id = null;
+      if (detail.location && typeof detail.location === 'object' && (detail.location.id || detail.location.value)) {
+        location_id = detail.location.id || detail.location.value;
+      } else if (typeof detail.location === 'number' || typeof detail.location === 'string') {
+        location_id = detail.location;
+      } else if (detail.location_id && typeof detail.location_id === 'object' && (detail.location_id.id || detail.location_id.value)) {
+        location_id = detail.location_id.id || detail.location_id.value;
+      } else if (typeof detail.location_id === 'number' || typeof detail.location_id === 'string') {
+        location_id = detail.location_id;
+      }
+
+      let product_id = null;
+      if (detail.product && typeof detail.product === 'object' && detail.product.id) {
+        product_id = detail.product.id;
+      } else if (typeof detail.product === 'number' || typeof detail.product === 'string') {
+        product_id = detail.product;
+      } else if (detail.product_id && typeof detail.product_id === 'object' && detail.product_id.id) {
+        product_id = detail.product_id.id;
+      } else if (typeof detail.product_id === 'number' || typeof detail.product_id === 'string') {
+        product_id = detail.product_id;
+      }
+
+      // Include id if present (for editing existing details)
+      const result = {
+        product_id,
+        location_id,
+        quantity: detail.quantity,
+        weight: detail.weight,
+        rate: detail.rate,
+        amount: detail.amount,
+      };
+      if (detail.id) {
+        result.id = detail.id;
+      }
+      return result;
+    });
+
+    // Ensure every detail has location_id
+    if (transformedDetails.some(d => !d.location_id)) {
+      alert("Each detail row must have a location selected.");
+      return;
+    }
 
     if (transformedDetails.length === 0) {
       alert("Please provide at least one detail entry.");
