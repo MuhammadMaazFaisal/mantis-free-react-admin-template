@@ -26,6 +26,7 @@ const Processing = () => {
   const [formData, setFormData] = useState({
     date: '',
     party_id: '',
+    reference_number: '',
     description: '',
     charges_total: 0.0,
     active: true,
@@ -159,6 +160,7 @@ const Processing = () => {
       date: item.date,
       party_id: item.party ? item.party.id : item.party_id,
       partyName: item.party ? item.party.name : '',
+      reference_number: item.reference_number || '',
       description: item.description,
       charges_total: item.charges_total,
       active: item.active == 1, // convert numeric flag to boolean
@@ -192,6 +194,7 @@ const Processing = () => {
       sm: 6,
       helperText: 'Select the party for this processing'
     },
+    { name: 'reference_number', label: 'Reference Number', type: 'text', sm: 6, helperText: 'Optional reference number for this processing' },
     { name: 'description', label: 'Description', multiline: true, rows: 2, sm: 12, helperText: 'Describe the processing batch' },
     { name: 'charges_total', label: 'Charges Total (Rs)', type: 'number', required: true, sm: 6, helperText: 'Total charges for this processing' },
     { name: 'active', label: 'Active', type: 'checkbox', sm: 6, helperText: 'Is this processing active?' },
@@ -294,6 +297,7 @@ const Processing = () => {
       setFormData({
         date: '',
         party_id: '',
+        reference_number: '',
         description: '',
         charges_total: 0.0,
         active: true,
@@ -317,6 +321,7 @@ const Processing = () => {
       setFormData({
         date: '',
         party_id: '',
+        reference_number: '',
         description: '',
         charges_total: 0.0,
         active: true,
@@ -356,6 +361,7 @@ const Processing = () => {
       const apiData = {
         date: formData.date,
         party_id: formData.party_id,
+        reference_number: formData.reference_number,
         description: formData.description,
         charges_total: formData.charges_total,
         active: formData.active,
@@ -618,6 +624,11 @@ const Processing = () => {
           <div>
             <strong>Process#:</strong> {processing.id}
           </div>
+          {processing.reference_number && (
+            <div>
+              <strong>Ref#:</strong> {processing.reference_number}
+            </div>
+          )}
         </div>
 
         {/* Raw Material Section */}
