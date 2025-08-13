@@ -407,13 +407,15 @@ const Processing = () => {
       : [];
 
     return (
-      <ProcessingOutTable
-        details={details}
-        onChange={(updatedDetails) => {
-          onChange(updatedDetails);
-        }}
-        isViewMode={isViewMode}
-      />
+      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <ProcessingOutTable
+          details={details}
+          onChange={(updatedDetails) => {
+            onChange(updatedDetails);
+          }}
+          isViewMode={isViewMode}
+        />
+      </Box>
     );
   };
 
@@ -423,13 +425,15 @@ const Processing = () => {
       : [];
 
     return (
-      <ProcessingInTable
-        details={details}
-        onChange={(updatedDetails) => {
-          onChange(updatedDetails);
-        }}
-        isViewMode={isViewMode}
-      />
+      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <ProcessingInTable
+          details={details}
+          onChange={(updatedDetails) => {
+            onChange(updatedDetails);
+          }}
+          isViewMode={isViewMode}
+        />
+      </Box>
     );
   };
 
@@ -439,23 +443,34 @@ const Processing = () => {
       : [];
 
     return (
-      <ProcessingExpensesTable
-        details={details}
-        onChange={(updatedDetails) => {
-          onChange(updatedDetails);
-        }}
-        isViewMode={isViewMode}
-      />
+      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <ProcessingExpensesTable
+          details={details}
+          onChange={(updatedDetails) => {
+            onChange(updatedDetails);
+          }}
+          isViewMode={isViewMode}
+        />
+      </Box>
     );
   };
 
   const renderCustomContent = (props) => (
-    <Box>
-      {renderProcessingOut(props)}
-      <Divider sx={{ my: 1 }} />
-      {renderProcessingIn(props)}
-      <Divider sx={{ my: 1 }} />
-      {renderProcessingExpenses(props)}
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>Processing Out</Typography>
+        {renderProcessingOut(props)}
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>Processing In</Typography>
+        {renderProcessingIn(props)}
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h6" gutterBottom>Processing Expenses</Typography>
+        {renderProcessingExpenses(props)}
+      </Box>
     </Box>
   );
 
@@ -820,27 +835,15 @@ const Processing = () => {
       <SharedModal
         open={modalOpen}
         onClose={handleCloseModal}
-        title={
-          modalMode === 'add'
-            ? 'Processing, Add new'
-            : modalMode === 'edit'
-              ? 'Edit Processing'
-              : 'View Processing'
-        }
+        title={`${modalMode === 'add' ? 'Add' : modalMode === 'edit' ? 'Edit' : 'View'} Processing`}
         formData={formData}
         onChange={handleFormChange}
         onSubmit={handleSubmit}
         mode={modalMode}
         fields={fields}
         renderCustomContent={renderCustomContent}
-        maxWidth="xl"
-        fullWidth
-        actions={
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, p: 2, position: 'sticky', bottom: 0, bgcolor: 'background.paper', zIndex: 1 }}>
-            <Button onClick={handleCloseModal}>Cancel</Button>
-            <Button variant="contained" onClick={handleSubmit} disabled={modalMode === 'view'}>Save</Button>
-          </Box>
-        }
+        fullWidth={true}
+        fullScreen={true}
       />
     </Box>
   );

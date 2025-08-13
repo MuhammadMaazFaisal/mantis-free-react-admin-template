@@ -14,25 +14,32 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
-const modalStyle = {
+const modalStyle = (fullWidth = false, fullScreen = false) => ({
   position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 800,
+  top: fullScreen ? '0' : '50%',
+  left: fullScreen ? '0' : '50%',
+  transform: fullScreen ? 'none' : 'translate(-50%, -50%)',
+  width: fullScreen ? '100%' : (fullWidth ? '90%' : 800),
+  height: fullScreen ? '100%' : 'auto',
+  maxHeight: fullScreen ? '100%' : '90vh',
   bgcolor: 'background.paper',
   boxShadow: 24,
-  borderRadius: 2,
+  borderRadius: fullScreen ? 0 : 2,
   display: 'flex',
   flexDirection: 'column',
-};
+  margin: 0,
+  padding: 0,
+  overflow: 'hidden',
+});
 
-const contentStyle = {
+const contentStyle = (fullScreen = false) => ({
   p: 4,
-  maxHeight: '80vh',
+  maxHeight: fullScreen ? 'calc(100vh - 136px)' : '70vh',
   overflowY: 'auto',
   flex: 1,
-};
+  width: '100%',
+  overflowX: 'auto',
+});
 
 const SharedModal = ({
   open,
@@ -44,6 +51,8 @@ const SharedModal = ({
   mode,
   fields,
   renderCustomContent,
+  fullWidth = false,
+  fullScreen = false,
 }) => {
   const isViewMode = mode === 'view';
 
@@ -126,8 +135,8 @@ const SharedModal = ({
 
   return (
     <Modal open={open} onClose={onClose}>
-      <Box sx={modalStyle}>
-        <Box sx={contentStyle}>
+      <Box sx={modalStyle(fullWidth, fullScreen)}>
+        <Box sx={contentStyle(fullScreen)}>
           <Typography variant="h6" mb={3}>
             {title}
           </Typography>
