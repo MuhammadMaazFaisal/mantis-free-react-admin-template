@@ -231,7 +231,7 @@ const ProcessingOutTable = ({ details, onChange, isViewMode }) => {
                     )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', padding: '6px 12px', borderBottom: '1px solid #e8ecef', borderRight: '1px solid #e8ecef' }}>
-                    {isViewMode ? (detail.product_id ? `Product ${detail.product_id}` : '-') : (
+                    {isViewMode ? (detail.product.name ? detail.product.name : '-') : (
                       <Autocomplete
                         value={products?.find(p => p.id === detail.product_id) || null}
                         onChange={(event, newValue) => handleDetailAutocomplete(index, 'product_id', newValue)}
