@@ -50,7 +50,8 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
   );
 
   const { pathname } = useLocation();
-  const isSelected = !!matchPath({ path: item?.link ? item.link : item.url, end: false }, pathname);
+  const isExternal = item.url && (item.url.startsWith('http://') || item.url.startsWith('https://'));
+  const isSelected = !isExternal && !!matchPath({ path: item?.link ? item.link : item.url, end: false }, pathname);
 
   const textColor = 'text.primary';
   const iconSelectedColor = 'primary.main';
@@ -59,9 +60,8 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
     <>
       <Box sx={{ position: 'relative' }}>
         <ListItemButton
-          component={Link}
-          to={item.url}
-          target={itemTarget}
+          component={isExternal ? 'a' : Link}
+          {...(isExternal ? { href: item.url, target: '_blank', rel: 'noopener noreferrer' } : { to: item.url, target: itemTarget })}
           disabled={item.disabled}
           selected={isSelected}
           sx={(theme) => ({

@@ -136,7 +136,13 @@ const reports = {
       id: 'stock-report',
       title: 'Stock Report',
       type: 'item',
-      url: '/reports/stock-report',
+      url: 'https://docs.google.com/spreadsheets/d/1SdxzQFyktR64RuDVRGWo6PRu_QRX23cbtSNYKFmzb1I/edit?gid=457511393#gid=457511393',
+    },
+    {
+      id: 'contract',
+      title: 'Contract',
+      type: 'item',
+      url: 'https://docs.google.com/spreadsheets/d/1e0kns-gvUbCv7dS8NK-YGWzQPD6fmtc75-xAVNhwoE4/edit?gid=0#gid=0',
     },
     {
       id: 'party-ledger',
